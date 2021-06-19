@@ -56,6 +56,10 @@ DMA_HandleTypeDef hdma_usart3_rx;
 #define OFF                            0
 #define ON                             1
 #define nTimer                        16
+#define TMR2_16bits                65536u
+#define EngineSpeedPeriod_Min     785455u     //100rpm
+#define EngineSpeedPeriod_Max       5236u     //15000rpm
+#define RPM_const               78545455u
 
 #define AFR_Bensine									 132
 #define AFR_Ethanol								    90
@@ -70,7 +74,7 @@ DMA_HandleTypeDef hdma_usart3_rx;
 #define quickCmdPos                   30
 #define quickCmdNeg                  -30
 #define threshould                  2500
-#define tfastenrich								 	 200
+#define tfastenrich								  1000
 #define tfastenleanment							 200
 #define tps_min												20
 #define increment                      1
@@ -144,9 +148,13 @@ typedef struct system_info
 		uint8_t  counterPos;                    
     uint8_t  counterNeg;       
     enum Lambda LambDir; 		
+		uint8_t  Update_calc;
+		uint32_t nOverflow_RE;
+		uint32_t nOverflow_FE;
+		uint32_t Rising_Edge_Counter;
 }system_vars;
 
-volatile system_vars scenario = {WAKEUP,ACCEL,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,100,100,100,100,100,100,100,163,AFR_Bensine,100,308,1450,0,0,10,10};
+volatile system_vars scenario={WAKEUP,ACCEL,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,100,100,100,100,100,100,100,163,AFR_Bensine,100,308,1450,0,0,10,10,POS,0,0,0,0};
 
 /*
 Pmap=100;    //KPa
@@ -267,7 +275,7 @@ void Set_Ouput_Pump(uint8_t Value)
 
 uint8_t Read_Output_Pump(void)
 {
-		//HAL_GPIO_ReadPin(GPIOB,GPIO_PIN_6);
+		//return(HAL_GPIO_ReadPin(GPIOB,GPIO_PIN_6));
 		return(!HAL_GPIO_ReadPin(GPIOB,GPIO_PIN_14));
 }	
 
@@ -350,6 +358,114 @@ void Periodic_task(uint32_t period, void (*func)(void), sched_var var[], uint8_t
         var[pos].program = FALSE;
         (*func)();
     }
+}
+
+// A iterative binary search function. It returns
+// location of x in given array arr[l..r] if present,
+// otherwise -1
+uint8_t binarySearch(volatile uint16_t array[], uint8_t first, uint8_t last, uint16_t search)
+{
+    uint8_t middle;
+
+    middle = (first+last)>>1;
+
+    while (first <= last)
+    {
+        if((search >= array[middle])&&
+           (search <= array[middle+1]))
+        {
+            return middle;
+        }
+        else if(search > array[middle+1])
+        {
+            first = middle+1;
+        }
+        else //search < array[middle]
+        {
+            last = middle;
+        }
+
+        middle = (first + last)>>1;
+    }
+
+    return (255u);
+}
+
+//This function was prepared to return a 8 bits value, however is saturated  in 64
+//Its mandatory in rpm array there are some difference value between two adjacent fields, if do not respect will cause an error return 0xFF
+uint8_t linearInterpolation(uint16_t value, volatile uint16_t x_array[], volatile uint8_t y_array[])
+{
+    uint8_t interp_index;
+    uint8_t interp_res;
+
+    //Advance saturation for array min and max
+    if(value<x_array[0])
+    {
+        return(y_array[0]);
+    }
+    else if(value>x_array[11])
+    {
+        return(y_array[11]);
+    }
+
+    interp_index = binarySearch(x_array, 0, 11, value);
+
+    if(((x_array[interp_index+1]-x_array[interp_index])!=0)&&(interp_index!=255u))
+    {
+        interp_res = (((y_array[interp_index+1]-y_array[interp_index])*(value-x_array[interp_index]))/(x_array[interp_index+1]-x_array[interp_index]))+y_array[interp_index];
+        if(interp_res>64u)
+        {
+            interp_res = 64u;
+        }
+        return(interp_res);
+    }
+    else
+    {
+        return(255u);
+    }
+}
+
+void Engine_STOP_test(void)
+{
+    static uint8_t program;
+    static uint32_t initial_value;
+
+    if(program == FALSE)
+    {
+        initial_value = scenario.Rising_Edge_Counter;
+        program = TRUE;
+    }
+    else
+    {
+        if(scenario.Rising_Edge_Counter == initial_value)
+        {
+            scenario.Rising_Edge_Counter = 0u;
+            scenario.Engine_Speed = 0u;
+            program = FALSE;
+        }
+    }
+}
+
+uint8_t digitalFilter8bits(uint8_t var, uint8_t k)
+{
+    static uint8_t varOld = 0u;
+    uint8_t varFiltered;
+
+    varFiltered = var + (((varOld-var)*k)/255u);
+    varOld = var;
+
+    return(varFiltered);
+}
+
+uint16_t digitalFilter16bits(uint16_t var, uint8_t k)
+{
+    static uint16_t varOld = 0u;
+    uint16_t varFiltered;
+
+    varFiltered = var + (((varOld-var)*k)/255u);
+    varOld = var;
+
+    return(varFiltered);
 }
 
 void setTimeoutHookUp(enum TimerID timer,uint32_t period,void (*func)(void))
@@ -472,7 +588,6 @@ uint8_t funcfastEnleanment(uint8_t TPS)
 
 /* Gas treatment */
 //create a automatic learning to get tps_min and tps_max
-
 void TPS_Treatment(void)
 {	
 		scenario.deltaTPS=scenario.TPS-scenario.TPS_old;	  
@@ -480,6 +595,7 @@ void TPS_Treatment(void)
 		if(scenario.deltaTPS>quickCmdPos)
 		{
 				//Enrichment fuel based in a table deltaTPS(temp)
+			  Set_Output_LED_Red(ON);
 			  scenario.fastEnrichmentTerm=funcfastEnrichment(scenario.deltaTPS);   //1,2				
 				Cond5=TRUE;
     }
@@ -492,7 +608,8 @@ void TPS_Treatment(void)
 		
 		if(Timeout_ms(Cond5,&Counter5,tfastenrich))
 		{
-				Cond5=FALSE;		     
+				Cond5=FALSE;	
+        Set_Output_LED_Red(OFF);			
         scenario.fastEnrichmentTerm=100;	   		
 		}
 		else if(Timeout_ms(Cond6,&Counter6,tfastenleanment))
@@ -510,6 +627,8 @@ void TPS_Treatment(void)
 		{
 				scenario.cuttOffTerm=1;
 		}	
+		
+		scenario.TPS_old=scenario.TPS;
 }	
 
 uint8_t funcwarmUp(uint8_t temp)
@@ -767,7 +886,50 @@ void Eng_Status(void)
 				default:        break;
 		}
 }	
-	
+
+void Set_Pulse_Program(void)
+{
+    Set_Ouput_InterruptionTest();
+
+    scenario.Measured_Period += scenario.nOverflow_RE*TMR2_16bits;
+
+    //Engine speed must be greater than 100rpm and less than 15000rpm to consider Measured_Period useful for calculations
+    if((scenario.Measured_Period<=EngineSpeedPeriod_Min)&&
+       (scenario.Measured_Period>=EngineSpeedPeriod_Max))
+    {
+        scenario.Engine_Speed = RPM_const/scenario.Measured_Period;
+        scenario.Engine_Speed_old = scenario.Engine_Speed;
+        scenario.deltaEngineSpeed = scenario.Engine_Speed-scenario.Engine_Speed_old;
+
+        //Linear prediction
+        if((scenario.Engine_Speed<<1u)>scenario.Engine_Speed_old)
+        {
+            scenario.engineSpeedPred = (scenario.Engine_Speed<<1u)-scenario.Engine_Speed_old;
+            //scenario.tdutyInputSignalPredLinear = (RPM_const*calibFlashBlock.Calibration_RAM.sensorAngDisplecement)/(scenario.engineSpeedPred*360u);
+        }
+        else
+        {
+            scenario.engineSpeedPred = 0u;
+        }
+
+        //For calculus purpose I decided to use the linear prediction
+        scenario.Engine_Speed = scenario.engineSpeedPred;
+
+        scenario.TDuty_Input_Signal += scenario.nOverflow_FE*TMR2_16bits;             
+    }
+    else if(scenario.Measured_Period<EngineSpeedPeriod_Max)
+    {
+        //set flag Overspeed
+        //register the max engine speed
+    }
+    else
+    {
+        //Underspeed
+        //maybe I don´t need to register this because will happening all engine start event
+    }
+
+    Set_Ouput_InterruptionTest();
+}
 
 /* USER CODE END PFP */
 
@@ -818,7 +980,12 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-    /* USER CODE END WHILE */
+		//Update the pulse calc scenario
+    if (scenario.Update_calc == TRUE)
+    {
+        Set_Pulse_Program();
+        scenario.Update_calc = FALSE;
+    }
 		
 		//Scheduler
     Periodic_task(  20,&Task_Fast,   array_sched_var, 0);
@@ -827,6 +994,8 @@ int main(void)
 		
 		//Timer Management
 		TimerListManagement(timerList);
+		
+    /* USER CODE END WHILE */		
 
     /* USER CODE BEGIN 3 */
   }
@@ -1264,6 +1433,49 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+{
+    if(htim->Instance == TIM2)
+    {
+        scenario.nOverflow++;
+    }
+}
+
+void Rising_Edge_Event(void)
+{	  
+    scenario.Measured_Period = HAL_TIM_ReadCapturedValue(&htim2,TIM_CHANNEL_1);
+    scenario.nOverflow_RE = scenario.nOverflow;
+    __HAL_TIM_SET_COUNTER(&htim2,0u);
+    scenario.nOverflow = 0u;
+    scenario.Rising_Edge_Counter++;
+}
+
+void Falling_Edge_Event(void)
+{
+    scenario.TDuty_Input_Signal = HAL_TIM_ReadCapturedValue(&htim2,TIM_CHANNEL_2);
+    scenario.nOverflow_FE = scenario.nOverflow;
+
+    if (scenario.Rising_Edge_Counter>=2u)
+    {
+        scenario.Update_calc = TRUE;        //set zero after Engine Stop was detected
+    }
+}
+
+void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
+{
+    if((htim->Instance == TIM2)&&
+       (htim->Channel == HAL_TIM_ACTIVE_CHANNEL_1))
+    {
+        Rising_Edge_Event();
+    }
+
+    if((htim->Instance == TIM2)&&
+       (htim->Channel == HAL_TIM_ACTIVE_CHANNEL_2))
+    {
+        Falling_Edge_Event();
+    }
+}
 
 /* USER CODE END 4 */
 
