@@ -1,0 +1,1299 @@
+/* USER CODE BEGIN Header */
+/**
+  ******************************************************************************
+  * @file           : main.c
+  * @brief          : Main program body
+  ******************************************************************************
+  * @attention
+  *
+  * <h2><center>&copy; Copyright (c) 2021 STMicroelectronics.
+  * All rights reserved.</center></h2>
+  *
+  * This software component is licensed by ST under BSD 3-Clause license,
+  * the "License"; You may not use this file except in compliance with the
+  * License. You may obtain a copy of the License at:
+  *                        opensource.org/licenses/BSD-3-Clause
+  *
+  ******************************************************************************
+  */
+/* USER CODE END Header */
+
+/* Includes ------------------------------------------------------------------*/
+#include "main.h"
+
+/* Private includes ----------------------------------------------------------*/
+/* USER CODE BEGIN Includes */
+#include "FLASH_PAGE.h"
+/* USER CODE END Includes */
+
+/* Private typedef -----------------------------------------------------------*/
+/* USER CODE BEGIN PTD */
+
+/* USER CODE END PTD */
+
+/* Private define ------------------------------------------------------------*/
+/* USER CODE BEGIN PD */
+/* USER CODE END PD */
+
+/* Private macro -------------------------------------------------------------*/
+/* USER CODE BEGIN PM */
+
+/* USER CODE END PM */
+
+/* Private variables ---------------------------------------------------------*/
+ADC_HandleTypeDef hadc1;
+ADC_HandleTypeDef hadc2;
+
+TIM_HandleTypeDef htim2;
+TIM_HandleTypeDef htim4;
+
+UART_HandleTypeDef huart3;
+DMA_HandleTypeDef hdma_usart3_rx;
+
+/* USER CODE BEGIN PV */
+#define FALSE                          0
+#define TRUE                           1
+#define OFF                            0
+#define ON                             1
+#define nTimer                        16
+
+#define AFR_Bensine									 132
+#define AFR_Ethanol								    90
+#define accel_rate                   150
+#define decel_rate                  -150
+#define maxPedalOnCrank               70
+#define rpm_max                     7000
+#define hyst                         300
+#define rpm_stopped                  300
+#define idle_min                    1100
+#define idle_max										1800
+#define quickCmdPos                   30
+#define quickCmdNeg                  -30
+#define threshould                  2500
+#define tfastenrich								 	 200
+#define tfastenleanment							 200
+#define tps_min												20
+#define increment                      1
+#define decrement                      1
+
+uint8_t Cond0=0,Cond1=0,Cond2=0,Cond3=0,Cond4=0,Cond5=0,Cond6=0;
+uint32_t Counter0=0,Counter1=0,Counter2=0,Counter3=0,Counter4=0,Counter5=0,Counter6=0,Counter7=0,Counter8=0,Counter9=0,Counter10=0;
+uint8_t pulseDetected=0;
+
+//Scheduller
+typedef struct Scheduler
+{
+    uint8_t  program;
+    uint32_t target_time;
+}sched_var;
+
+sched_var array_sched_var[3];
+
+enum TimerID{Timer0,Timer1,Timer2,Timer3,Timer4,Timer5,Timer6,Timer7,Timer8,Timer9,Timer10,Timer11,Timer12,Timer13,Timer14,Timer15};// TimerNumb;
+enum EngineState{WAKEUP,PRIMERINJ,STOP,CRANK,STALL,IDLE,CRUISE,OVERSPEED};
+enum Accel{ACCEL,DECEL,STABLE};
+enum Lambda{POS,NEG};
+
+
+typedef struct TimerStruct
+{
+	  uint32_t target_time;
+    uint8_t  output;    
+    void (*func_pointer)();
+}timerSchedtype;
+
+timerSchedtype timerList[nTimer]; //={{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0}};
+
+typedef struct system_info
+{
+    enum EngineState Engine_State;
+	  enum Accel Acceleration;
+	  uint16_t Engine_Speed_old;
+    uint16_t Engine_Speed;
+	  int16_t  deltaEngineSpeed;  
+    uint16_t engineSpeedPred;
+    uint16_t engineSpeedFiltered;
+    uint16_t avarageEngineSpeed;     
+    uint32_t inversorEventCounter;
+    uint32_t Measured_Period;
+    uint32_t TDuty_Input_Signal;
+    uint32_t tdutyInputSignalPred;
+    uint32_t tdutyInputSignalPredLinear;
+    int8_t   deltaTPS;
+    uint8_t  TPS;
+    uint8_t  TPS_old;        
+    uint32_t nOverflow;
+	  uint8_t  EngineDiedCounter;
+    uint8_t  cuttOffTerm;
+    uint8_t  EngineTemp;
+	  uint8_t  fastEnrichmentTerm;	
+		uint8_t  warmUpTerm;
+		uint8_t  OverspeedTerm;
+		uint8_t  crankTerm;
+		uint8_t  LambdaCorrectTerm;
+		uint8_t  Pmap;
+		uint8_t  Voleff;
+		uint8_t  Displacement;
+		uint8_t  AFRstoich;
+		uint8_t  Lambda;
+		uint16_t Tair;
+		uint16_t Injectormassflow;
+		uint32_t PW_us;
+		uint32_t Fuelmass;
+		uint32_t counterCycles;
+		uint8_t  counterPos;                    
+    uint8_t  counterNeg;       
+    enum Lambda LambDir; 		
+}system_vars;
+
+volatile system_vars scenario = {WAKEUP,ACCEL,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,100,100,100,100,100,100,100,163,AFR_Bensine,100,308,1450,0,0,10,10};
+
+/*
+Pmap=100;    //KPa
+Voleff=100;  //from table
+Displacement=163;
+AFR=132;
+Lambda=100;
+Tair=308;  //273+35
+Injectormassflow=1450;
+
+Fuelmass=(34847/1000000)*((Pmap*Voleff*Displacement)/(AFR*Lambda*Tair));
+PW_us=(Fuelmass*600000000)/Injectormassflow;
+*/
+	
+/* USER CODE END PV */
+
+/* Private function prototypes -----------------------------------------------*/
+void SystemClock_Config(void);
+static void MX_GPIO_Init(void);
+static void MX_DMA_Init(void);
+static void MX_TIM2_Init(void);
+static void MX_TIM4_Init(void);
+static void MX_ADC1_Init(void);
+static void MX_ADC2_Init(void);
+static void MX_USART3_UART_Init(void);
+/* USER CODE BEGIN PFP */
+	
+//Function prototypes	
+void TPS_Treatment(void);	
+void Eng_Status(void);
+void AccelDer(void);	
+	
+//Led Green (Bluepill)
+void Toggle_LED_Green(void)
+{
+    HAL_GPIO_TogglePin(GPIOC,GPIO_PIN_13);
+}
+
+void Set_Output_LED_Green(uint8_t	Value)
+{	
+		if(Value==ON)
+		{	
+				HAL_GPIO_WritePin(GPIOC,GPIO_PIN_13,GPIO_PIN_RESET);
+		}	
+		else
+		{
+				HAL_GPIO_WritePin(GPIOC,GPIO_PIN_13,GPIO_PIN_SET);
+		}	
+}
+
+//Led Red
+void Toggle_LED_Red(void)
+{
+    HAL_GPIO_TogglePin(GPIOB,GPIO_PIN_12);
+}
+
+void Set_Output_LED_Red(uint8_t	Value)
+{	
+		if(Value==ON)
+		{	
+				HAL_GPIO_WritePin(GPIOB,GPIO_PIN_12,GPIO_PIN_RESET);
+		}	
+		else
+		{
+				HAL_GPIO_WritePin(GPIOB,GPIO_PIN_12,GPIO_PIN_SET);
+		}	
+}
+
+//Led Blue
+void Toggle_LED_Blue(void)
+{
+    HAL_GPIO_TogglePin(GPIOB,GPIO_PIN_13);
+}
+
+void Set_Output_LED_Blue(uint8_t Value)
+{	
+		if(Value==ON)
+		{	
+				HAL_GPIO_WritePin(GPIOB,GPIO_PIN_13,GPIO_PIN_RESET);
+		}	
+		else
+		{
+				HAL_GPIO_WritePin(GPIOB,GPIO_PIN_13,GPIO_PIN_SET);
+		}	
+}
+
+//Led Yellow
+void Toggle_LED_Yellow(void)
+{
+    HAL_GPIO_TogglePin(GPIOB,GPIO_PIN_14);
+}
+
+void Set_Output_LED_Yellow(uint8_t Value)
+{	
+		if(Value==ON)
+		{	
+				HAL_GPIO_WritePin(GPIOB,GPIO_PIN_14,GPIO_PIN_RESET);
+		}	
+		else
+		{
+				HAL_GPIO_WritePin(GPIOB,GPIO_PIN_14,GPIO_PIN_SET);
+		}	
+}
+
+void Set_Ouput_Pump(uint8_t Value)
+{
+    if (Value==ON)
+    {
+        //HAL_GPIO_WritePin(GPIOB,GPIO_PIN_6,GPIO_PIN_SET);
+			  HAL_GPIO_WritePin(GPIOB,GPIO_PIN_14,GPIO_PIN_RESET);
+    }
+    else
+    {
+        //HAL_GPIO_WritePin(GPIOB,GPIO_PIN_6,GPIO_PIN_RESET);
+			  HAL_GPIO_WritePin(GPIOB,GPIO_PIN_14,GPIO_PIN_SET);
+    }
+}
+
+uint8_t Read_Output_Pump(void)
+{
+		//HAL_GPIO_ReadPin(GPIOB,GPIO_PIN_6);
+		return(!HAL_GPIO_ReadPin(GPIOB,GPIO_PIN_14));
+}	
+
+void Set_Ouput_Injector(uint8_t Value)
+{
+    if (Value == ON)
+    {
+        //HAL_GPIO_WritePin(GPIOA,GPIO_PIN_2,GPIO_PIN_SET);
+			  HAL_GPIO_WritePin(GPIOB,GPIO_PIN_13,GPIO_PIN_RESET);
+    }
+    else
+    {
+        //HAL_GPIO_WritePin(GPIOA,GPIO_PIN_2,GPIO_PIN_RESET);
+			  HAL_GPIO_WritePin(GPIOB,GPIO_PIN_13,GPIO_PIN_SET);
+    }
+}
+
+void Hardware_Init(void)
+{
+		Set_Output_LED_Green(OFF);
+		Set_Output_LED_Red(OFF);
+		Set_Output_LED_Blue(OFF);
+		Set_Output_LED_Yellow(OFF);
+		Set_Ouput_Pump(OFF);
+		Set_Ouput_Injector(OFF);
+}
+
+void Set_Ouput_InterruptionTest(void)
+{
+    HAL_GPIO_TogglePin(GPIOA,GPIO_PIN_6);
+}
+
+void Task_Fast(void)
+{
+    //HAL_IWDG_Init(&hiwdg);
+	  //Toggle_LED_Red();	 
+	  TPS_Treatment();
+	  AccelDer();
+	  Eng_Status();
+}
+
+void Task_Medium(void)
+{    
+    //Toggle_LED_Blue();	    
+}
+
+void Task_Slow(void)
+{
+		//static uint8_t teste=0;
+	  //Toggle_LED_Yellow();
+	  /*
+	  if(!teste)
+		{	
+				Set_Ouput_Injector(ON);
+			  teste=1;
+		}	
+	  else
+		{	
+				Set_Ouput_Injector(OFF);
+			  teste=0;
+		}	
+	  */
+	  //Toggle_LED_Green();   
+}
+
+void Periodic_task(uint32_t period, void (*func)(void), sched_var var[], uint8_t pos)
+{
+    volatile uint32_t counter;
+
+    counter = HAL_GetTick();
+
+    if(var[pos].program == FALSE)
+    {
+        var[pos].target_time = counter+period;
+        var[pos].program = TRUE;
+    }
+
+    if(counter>=var[pos].target_time)
+    {
+        var[pos].program = FALSE;
+        (*func)();
+    }
+}
+
+void setTimeoutHookUp(enum TimerID timer,uint32_t period,void (*func)(void))
+{
+    timerList[timer].target_time=HAL_GetTick()+period;
+    timerList[timer].func_pointer=*func;
+    timerList[timer].output=FALSE;
+}
+
+uint8_t checkTimeoutHookUp(enum TimerID Timer)
+{
+    uint8_t TempResp=FALSE;
+
+    if(timerList[Timer].output==TRUE)
+    {
+        timerList[Timer].output=FALSE;
+        timerList[Timer].target_time=0;
+        timerList[Timer].func_pointer=0;
+        TempResp=TRUE;
+    }
+
+    return (TempResp);
+}
+
+void TimerListManagement(timerSchedtype timerList[])
+{
+    uint8_t line;
+
+    for(line=0;line<nTimer;line++)
+    {
+        if(timerList[line].target_time!=0)
+        {
+            if(HAL_GetTick()>=timerList[line].target_time)
+            {
+							  timerList[line].target_time=0;
+                timerList[line].output=TRUE;
+                timerList[line].func_pointer();
+            }
+        }
+    }
+}
+
+uint8_t Timeout_ms(uint8_t Condition,uint32_t *timer,uint32_t period)
+{
+    uint8_t TimeoutResp=FALSE;
+
+    if(Condition==TRUE)
+    {
+        if(*timer==0)
+        {
+            *timer=HAL_GetTick()+period;
+        }
+
+        if(HAL_GetTick()>=*timer)
+        {
+            TimeoutResp=TRUE;
+        }
+    }
+    else
+    {
+        *timer=0;
+    }
+
+    return (TimeoutResp);
+}
+
+void TurnOffPump(void)
+{
+    Set_Ouput_Pump(OFF);
+}
+
+void TurnOffInjector(void)
+{
+    Set_Ouput_Injector(OFF);
+}
+
+uint32_t PrimerPulse(uint8_t temp)
+{
+	  if(temp>80)
+		{
+				return (150);
+		}			
+		else
+		{
+				return (10);
+    }				
+}	
+
+//Detect engine acceleration and classify as: Pos, Neg or stable
+void AccelDer(void)
+{	
+	  scenario.deltaEngineSpeed=scenario.Engine_Speed-scenario.Engine_Speed_old;
+	  	
+    if(scenario.deltaEngineSpeed>accel_rate)		
+    {
+        scenario.Acceleration=ACCEL;
+    }
+    else if(scenario.deltaEngineSpeed<decel_rate)		
+    {
+        scenario.Acceleration=DECEL;
+    }
+    else
+    {
+        scenario.Acceleration=STABLE;
+    }
+
+    scenario.Engine_Speed_old=scenario.Engine_Speed;	
+}
+
+//Throttle position sensor treatment
+uint8_t funcfastEnrichment(uint8_t TPS)
+{
+		return(120);
+}	
+
+uint8_t funcfastEnleanment(uint8_t TPS)
+{
+		return(80);	
+}	
+
+/* Gas treatment */
+//create a automatic learning to get tps_min and tps_max
+
+void TPS_Treatment(void)
+{	
+		scenario.deltaTPS=scenario.TPS-scenario.TPS_old;	  
+
+		if(scenario.deltaTPS>quickCmdPos)
+		{
+				//Enrichment fuel based in a table deltaTPS(temp)
+			  scenario.fastEnrichmentTerm=funcfastEnrichment(scenario.deltaTPS);   //1,2				
+				Cond5=TRUE;
+    }
+		else if(scenario.deltaTPS<quickCmdNeg)
+		{
+				//En-leanment fuel based in a table deltaTPS(temp)
+			  scenario.fastEnrichmentTerm=funcfastEnleanment(scenario.deltaTPS);   //0,8
+				Cond6=TRUE;
+    }
+		
+		if(Timeout_ms(Cond5,&Counter5,tfastenrich))
+		{
+				Cond5=FALSE;		     
+        scenario.fastEnrichmentTerm=100;	   		
+		}
+		else if(Timeout_ms(Cond6,&Counter6,tfastenleanment))
+		{
+				Cond6=FALSE;		
+        scenario.fastEnrichmentTerm=100;				
+		}
+				
+		//Pay attention, this function can overwrite enrichment function...
+		if((scenario.TPS<tps_min)&&(scenario.Engine_Speed>threshould))
+		{
+				scenario.cuttOffTerm=0;
+		}
+		else
+		{
+				scenario.cuttOffTerm=1;
+		}	
+}	
+
+uint8_t funcwarmUp(uint8_t temp)
+{	
+		return (100);
+}
+
+uint8_t funccrankTerm(uint8_t temp)
+{
+		return(100);
+}
+
+/*
+Important requirements
+Practically, when the engine is in a steady state, fuel mixture deviates from the stoichiometric
+in range ±2% ~ ±3% with frequency 1 ~ 2 times per second.
+This process can be assessed very well by observing the output signal waveforms of the oxygen sensor.
+Transition time of the output voltage should not exceed 120mS from one level to another.
+*/
+void LambdaCorrectionFunc(uint8_t lambdaRequested, uint8_t lambdaMeasured)
+{
+    if(lambdaRequested!=100)
+    {
+        return;
+    }
+
+    if(lambdaMeasured>70)
+    {
+				scenario.LambDir=NEG;
+    }
+    else if(lambdaMeasured<30)
+    {
+				scenario.LambDir=POS;
+    }
+    else
+    {
+        scenario.LambdaCorrectTerm=100;
+        return;
+    }
+
+    switch(scenario.LambDir)
+    {
+				case POS:   scenario.LambdaCorrectTerm=100+increment;
+
+                    if(scenario.LambdaCorrectTerm>=110)
+                    {
+                        if(scenario.counterPos==0)
+                        {
+                            scenario.LambdaCorrectTerm=100;
+                        }
+                        else
+                        {
+                            scenario.counterPos--;
+                            scenario.LambdaCorrectTerm=110;
+                        }
+                    }
+
+                    break;
+
+        case NEG:   scenario.LambdaCorrectTerm=100-decrement;
+
+                    if(scenario.LambdaCorrectTerm<=90)
+                    {
+                        if(scenario.counterNeg==0)
+                        {
+                            scenario.LambdaCorrectTerm=100;
+                        }
+                        else
+                        {
+                            scenario.counterPos--;
+                            scenario.LambdaCorrectTerm=110;
+                        }
+                    }
+
+                    break;
+
+        default:    break;
+    }
+}
+
+uint8_t funcVoleff(uint8_t Pmap,uint16_t Engine_Speed)
+{	
+		return (100);
+}	
+
+uint8_t funcLambda(uint8_t Pmap,uint16_t Engine_Speed)
+{
+		return (100);
+}	
+
+uint8_t funcCycles(uint8_t temp)
+{
+		return (100);
+}
+
+void FuelCalc(void)
+{
+		if((scenario.Engine_State==IDLE)||(scenario.Engine_State==CRUISE))
+		{
+				if(!(scenario.counterCycles>=funcCycles(scenario.EngineTemp)))
+				{
+						scenario.warmUpTerm=funcwarmUp(scenario.EngineTemp);
+				}
+				else
+				{
+						scenario.warmUpTerm=100;
+				}
+
+				scenario.Voleff=funcVoleff(scenario.Engine_Speed,scenario.Pmap);
+				scenario.Lambda=funcLambda(scenario.Engine_Speed,scenario.Pmap);
+		}
+
+		if(scenario.Engine_State!=OVERSPEED)
+		{
+				scenario.OverspeedTerm=1;
+		}
+		else
+		{
+				scenario.OverspeedTerm=0;
+		}	
+		
+		if(scenario.Engine_State==CRANK)
+		{
+				//Fuel strategy
+				if(scenario.TPS>maxPedalOnCrank)
+				{
+						scenario.PW_us=0;
+				}
+				else
+				{
+						//After achieve Engine.State=Crank Enable to inject fixed fuel amount
+						scenario.Fuelmass=(34847/1000000)*((scenario.Pmap*scenario.Displacement)/((scenario.AFRstoich/100)*scenario.Tair))*(funcwarmUp(scenario.EngineTemp)/100);
+				}				
+		}
+		else if(scenario.Engine_State>CRANK)
+		{
+				scenario.Fuelmass=(34847/1000000)*((scenario.Pmap*(scenario.Voleff/100)*scenario.Displacement*(scenario.warmUpTerm/100)*(scenario.fastEnrichmentTerm/100)*scenario.OverspeedTerm*scenario.cuttOffTerm*(scenario.LambdaCorrectTerm/100))/((scenario.AFRstoich/100)*(scenario.Lambda/100)*scenario.Tair));
+		}
+		else if(scenario.Engine_State<CRANK)
+		{
+				scenario.PW_us=0;
+		}
+		else
+		{
+				scenario.PW_us=(scenario.Fuelmass*600000000)/scenario.Injectormassflow;
+		}
+}	
+
+//Will running periodically with period equal 50ms (20 times per second)
+//This state machine define the engine state
+void Eng_Status(void)
+{				
+		switch(scenario.Engine_State)
+		{
+				case WAKEUP:    ////Pump turn on
+												if(Read_Output_Pump()==OFF)
+												{
+														Set_Ouput_Pump(ON);													  
+														Cond0=TRUE;												
+												}
+												
+												//Wait some time to fill fuel rail
+												if(Timeout_ms(Cond0,&Counter0,2000))
+												{
+														Cond0=FALSE;
+														Set_Ouput_Injector(ON);
+														//setTimeoutHookUp(Timer0,PrimerPulse(scenario.EngineTemp),&TurnOffInjector);
+													  setTimeoutHookUp(Timer0,PrimerPulse(90),&TurnOffInjector);
+														scenario.Engine_State=PRIMERINJ;
+												} 
+									
+												break;
+
+				case PRIMERINJ: if(checkTimeoutHookUp(Timer0))
+												{
+														scenario.Engine_Speed=0;
+														Set_Output_LED_Green(ON);   //Crank allowed
+														scenario.Engine_State=STOP;													  
+												}
+
+												break;
+
+				case STOP:      //I need to treat this statment
+												if(pulseDetected)
+												{
+														Cond2=TRUE;   //Enable timer, timer limit to launch engine
+														scenario.Engine_State=CRANK;
+												}
+
+												break;
+
+				case CRANK:     if(scenario.Engine_Speed>idle_min)
+												{
+														//Enable the counter
+														Cond3=TRUE;
+
+														//Check if timer is elapsed
+														if(Timeout_ms(Cond3,&Counter3,3000))
+														{
+																Cond3=FALSE;
+																Set_Output_LED_Green(OFF);
+																scenario.Engine_State=IDLE;															  
+														}
+												}
+												else if(((scenario.Acceleration==DECEL)&&(scenario.Engine_Speed<=idle_min))||(Timeout_ms(Cond2,&Counter2,2000)))
+												{
+														Cond2=FALSE;
+														Cond4=TRUE;
+														scenario.Engine_State=STALL;
+												}
+												
+												break;
+
+				case STALL:  		if((scenario.Engine_Speed<rpm_stopped)||(Timeout_ms(Cond4,&Counter4,1500)))
+												{
+														Cond4=FALSE;
+														scenario.EngineDiedCounter++;
+														scenario.Engine_Speed=0;
+														Set_Output_LED_Green(ON);   //Crank allowed
+														scenario.Engine_State=STOP;
+												}
+
+												break;
+
+				case IDLE:      if(scenario.Engine_Speed>idle_max)
+												{
+														scenario.Engine_State=CRUISE;
+												}
+												else if(scenario.Engine_Speed<=idle_min)
+												{
+														scenario.Engine_State=STALL;
+													  Cond4=TRUE;
+												}
+
+												break;
+
+				case CRUISE:    if(scenario.Engine_Speed>rpm_max)
+												{
+														scenario.Engine_State=OVERSPEED;
+												}
+												else if(scenario.Engine_Speed<=idle_max)
+												{
+														scenario.Engine_State=IDLE;
+												}
+
+												break;
+
+				case OVERSPEED: if(scenario.Engine_Speed<=(rpm_max-hyst))
+												{
+														scenario.Engine_State=CRUISE;
+												}
+
+												break;
+
+				default:        break;
+		}
+}	
+	
+
+/* USER CODE END PFP */
+
+/* Private user code ---------------------------------------------------------*/
+/* USER CODE BEGIN 0 */
+
+/* USER CODE END 0 */
+
+/**
+  * @brief  The application entry point.
+  * @retval int
+  */
+int main(void)
+{
+  /* USER CODE BEGIN 1 */
+
+  /* USER CODE END 1 */
+
+  /* MCU Configuration--------------------------------------------------------*/
+
+  /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
+  HAL_Init();
+
+  /* USER CODE BEGIN Init */
+
+  /* USER CODE END Init */
+
+  /* Configure the system clock */
+  SystemClock_Config();
+
+  /* USER CODE BEGIN SysInit */
+
+  /* USER CODE END SysInit */
+
+  /* Initialize all configured peripherals */
+  MX_GPIO_Init();
+  MX_DMA_Init();
+  MX_TIM2_Init();
+  MX_TIM4_Init();
+  MX_ADC1_Init();
+  MX_ADC2_Init();
+  MX_USART3_UART_Init();
+  /* USER CODE BEGIN 2 */
+	Hardware_Init();
+  /* USER CODE END 2 */
+
+  /* Infinite loop */
+  /* USER CODE BEGIN WHILE */
+  while (1)
+  {
+    /* USER CODE END WHILE */
+		
+		//Scheduler
+    Periodic_task(  20,&Task_Fast,   array_sched_var, 0);
+    Periodic_task( 100,&Task_Medium, array_sched_var, 1);
+    Periodic_task(1000,&Task_Slow,   array_sched_var, 2);
+		
+		//Timer Management
+		TimerListManagement(timerList);
+
+    /* USER CODE BEGIN 3 */
+  }
+  /* USER CODE END 3 */
+}
+
+/**
+  * @brief System Clock Configuration
+  * @retval None
+  */
+void SystemClock_Config(void)
+{
+  RCC_OscInitTypeDef RCC_OscInitStruct = {0};
+  RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
+  RCC_PeriphCLKInitTypeDef PeriphClkInit = {0};
+
+  /** Initializes the CPU, AHB and APB busses clocks
+  */
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
+  RCC_OscInitStruct.HSEState = RCC_HSE_ON;
+  RCC_OscInitStruct.HSEPredivValue = RCC_HSE_PREDIV_DIV1;
+  RCC_OscInitStruct.HSIState = RCC_HSI_ON;
+  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
+  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
+  RCC_OscInitStruct.PLL.PLLMUL = RCC_PLL_MUL9;
+  if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /** Initializes the CPU, AHB and APB busses clocks
+  */
+  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
+                              |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
+  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
+  RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
+  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV2;
+  RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
+
+  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_ADC;
+  PeriphClkInit.AdcClockSelection = RCC_ADCPCLK2_DIV6;
+  if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK)
+  {
+    Error_Handler();
+  }
+}
+
+/**
+  * @brief ADC1 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_ADC1_Init(void)
+{
+
+  /* USER CODE BEGIN ADC1_Init 0 */
+
+  /* USER CODE END ADC1_Init 0 */
+
+  ADC_ChannelConfTypeDef sConfig = {0};
+
+  /* USER CODE BEGIN ADC1_Init 1 */
+
+  /* USER CODE END ADC1_Init 1 */
+  /** Common config
+  */
+  hadc1.Instance = ADC1;
+  hadc1.Init.ScanConvMode = ADC_SCAN_DISABLE;
+  hadc1.Init.ContinuousConvMode = DISABLE;
+  hadc1.Init.DiscontinuousConvMode = DISABLE;
+  hadc1.Init.ExternalTrigConv = ADC_SOFTWARE_START;
+  hadc1.Init.DataAlign = ADC_DATAALIGN_RIGHT;
+  hadc1.Init.NbrOfConversion = 1;
+  if (HAL_ADC_Init(&hadc1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /** Configure Regular Channel
+  */
+  sConfig.Channel = ADC_CHANNEL_4;
+  sConfig.Rank = ADC_REGULAR_RANK_1;
+  sConfig.SamplingTime = ADC_SAMPLETIME_1CYCLE_5;
+  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN ADC1_Init 2 */
+
+  /* USER CODE END ADC1_Init 2 */
+
+}
+
+/**
+  * @brief ADC2 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_ADC2_Init(void)
+{
+
+  /* USER CODE BEGIN ADC2_Init 0 */
+
+  /* USER CODE END ADC2_Init 0 */
+
+  ADC_ChannelConfTypeDef sConfig = {0};
+
+  /* USER CODE BEGIN ADC2_Init 1 */
+
+  /* USER CODE END ADC2_Init 1 */
+  /** Common config
+  */
+  hadc2.Instance = ADC2;
+  hadc2.Init.ScanConvMode = ADC_SCAN_DISABLE;
+  hadc2.Init.ContinuousConvMode = DISABLE;
+  hadc2.Init.DiscontinuousConvMode = DISABLE;
+  hadc2.Init.ExternalTrigConv = ADC_SOFTWARE_START;
+  hadc2.Init.DataAlign = ADC_DATAALIGN_RIGHT;
+  hadc2.Init.NbrOfConversion = 1;
+  if (HAL_ADC_Init(&hadc2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /** Configure Regular Channel
+  */
+  sConfig.Channel = ADC_CHANNEL_3;
+  sConfig.Rank = ADC_REGULAR_RANK_1;
+  sConfig.SamplingTime = ADC_SAMPLETIME_1CYCLE_5;
+  if (HAL_ADC_ConfigChannel(&hadc2, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN ADC2_Init 2 */
+
+  /* USER CODE END ADC2_Init 2 */
+
+}
+
+/**
+  * @brief TIM2 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM2_Init(void)
+{
+
+  /* USER CODE BEGIN TIM2_Init 0 */
+
+  /* USER CODE END TIM2_Init 0 */
+
+  TIM_ClockConfigTypeDef sClockSourceConfig = {0};
+  TIM_MasterConfigTypeDef sMasterConfig = {0};
+  TIM_IC_InitTypeDef sConfigIC = {0};
+
+  /* USER CODE BEGIN TIM2_Init 1 */
+
+  /* USER CODE END TIM2_Init 1 */
+  htim2.Instance = TIM2;
+  htim2.Init.Prescaler = 55;
+  htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim2.Init.Period = 65535;
+  htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_Base_Init(&htim2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
+  if (HAL_TIM_ConfigClockSource(&htim2, &sClockSourceConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  if (HAL_TIM_IC_Init(&htim2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim2, &sMasterConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sConfigIC.ICPolarity = TIM_INPUTCHANNELPOLARITY_RISING;
+  sConfigIC.ICSelection = TIM_ICSELECTION_DIRECTTI;
+  sConfigIC.ICPrescaler = TIM_ICPSC_DIV1;
+  sConfigIC.ICFilter = 3;
+  if (HAL_TIM_IC_ConfigChannel(&htim2, &sConfigIC, TIM_CHANNEL_1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sConfigIC.ICPolarity = TIM_INPUTCHANNELPOLARITY_FALLING;
+  sConfigIC.ICSelection = TIM_ICSELECTION_INDIRECTTI;
+  sConfigIC.ICFilter = 0;
+  if (HAL_TIM_IC_ConfigChannel(&htim2, &sConfigIC, TIM_CHANNEL_2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM2_Init 2 */
+
+  /* USER CODE END TIM2_Init 2 */
+
+}
+
+/**
+  * @brief TIM4 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM4_Init(void)
+{
+
+  /* USER CODE BEGIN TIM4_Init 0 */
+
+  /* USER CODE END TIM4_Init 0 */
+
+  TIM_ClockConfigTypeDef sClockSourceConfig = {0};
+  TIM_MasterConfigTypeDef sMasterConfig = {0};
+  TIM_OC_InitTypeDef sConfigOC = {0};
+
+  /* USER CODE BEGIN TIM4_Init 1 */
+
+  /* USER CODE END TIM4_Init 1 */
+  htim4.Instance = TIM4;
+  htim4.Init.Prescaler = 55;
+  htim4.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim4.Init.Period = 65535;
+  htim4.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim4.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_Base_Init(&htim4) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
+  if (HAL_TIM_ConfigClockSource(&htim4, &sClockSourceConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  if (HAL_TIM_OC_Init(&htim4) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim4, &sMasterConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sConfigOC.OCMode = TIM_OCMODE_ACTIVE;
+  sConfigOC.Pulse = 0;
+  sConfigOC.OCPolarity = TIM_OCPOLARITY_LOW;
+  sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
+  if (HAL_TIM_OC_ConfigChannel(&htim4, &sConfigOC, TIM_CHANNEL_1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  if (HAL_TIM_OC_ConfigChannel(&htim4, &sConfigOC, TIM_CHANNEL_2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sConfigOC.OCMode = TIM_OCMODE_TIMING;
+  sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
+  if (HAL_TIM_OC_ConfigChannel(&htim4, &sConfigOC, TIM_CHANNEL_3) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  if (HAL_TIM_OC_ConfigChannel(&htim4, &sConfigOC, TIM_CHANNEL_4) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM4_Init 2 */
+
+  /* USER CODE END TIM4_Init 2 */
+
+}
+
+/**
+  * @brief USART3 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_USART3_UART_Init(void)
+{
+
+  /* USER CODE BEGIN USART3_Init 0 */
+
+  /* USER CODE END USART3_Init 0 */
+
+  /* USER CODE BEGIN USART3_Init 1 */
+
+  /* USER CODE END USART3_Init 1 */
+  huart3.Instance = USART3;
+  huart3.Init.BaudRate = 115200;
+  huart3.Init.WordLength = UART_WORDLENGTH_8B;
+  huart3.Init.StopBits = UART_STOPBITS_1;
+  huart3.Init.Parity = UART_PARITY_NONE;
+  huart3.Init.Mode = UART_MODE_TX_RX;
+  huart3.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+  huart3.Init.OverSampling = UART_OVERSAMPLING_16;
+  if (HAL_UART_Init(&huart3) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN USART3_Init 2 */
+
+  /* USER CODE END USART3_Init 2 */
+
+}
+
+/**
+  * Enable DMA controller clock
+  */
+static void MX_DMA_Init(void)
+{
+
+  /* DMA controller clock enable */
+  __HAL_RCC_DMA1_CLK_ENABLE();
+
+  /* DMA interrupt init */
+  /* DMA1_Channel3_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA1_Channel3_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(DMA1_Channel3_IRQn);
+
+}
+
+/**
+  * @brief GPIO Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_GPIO_Init(void)
+{
+  GPIO_InitTypeDef GPIO_InitStruct = {0};
+
+  /* GPIO Ports Clock Enable */
+  __HAL_RCC_GPIOC_CLK_ENABLE();
+  __HAL_RCC_GPIOD_CLK_ENABLE();
+  __HAL_RCC_GPIOA_CLK_ENABLE();
+  __HAL_RCC_GPIOB_CLK_ENABLE();
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_6
+                          |GPIO_PIN_7, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_12
+                          |GPIO_PIN_13|GPIO_PIN_14|GPIO_PIN_15|GPIO_PIN_3
+                          |GPIO_PIN_4|GPIO_PIN_5|GPIO_PIN_6|GPIO_PIN_7
+                          |GPIO_PIN_8, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin : PC13 */
+  GPIO_InitStruct.Pin = GPIO_PIN_13;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : PC14 PC15 */
+  GPIO_InitStruct.Pin = GPIO_PIN_14|GPIO_PIN_15;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : PA0 PA1 PA2 PA6 */
+  GPIO_InitStruct.Pin = GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_6;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : PA7 */
+  GPIO_InitStruct.Pin = GPIO_PIN_7;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_OD;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : PB0 PB1 */
+  GPIO_InitStruct.Pin = GPIO_PIN_0|GPIO_PIN_1;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : PB2 PB12 PB13 PB14
+                           PB15 PB3 PB4 PB5
+                           PB6 PB7 */
+  GPIO_InitStruct.Pin = GPIO_PIN_2|GPIO_PIN_12|GPIO_PIN_13|GPIO_PIN_14
+                          |GPIO_PIN_15|GPIO_PIN_3|GPIO_PIN_4|GPIO_PIN_5
+                          |GPIO_PIN_6|GPIO_PIN_7;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : PA8 */
+  GPIO_InitStruct.Pin = GPIO_PIN_8;
+  GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : PA9 PA12 */
+  GPIO_InitStruct.Pin = GPIO_PIN_9|GPIO_PIN_12;
+  GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : PA10 PA11 */
+  GPIO_InitStruct.Pin = GPIO_PIN_10|GPIO_PIN_11;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : PB8 */
+  GPIO_InitStruct.Pin = GPIO_PIN_8;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_OD;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : PB9 */
+  GPIO_InitStruct.Pin = GPIO_PIN_9;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+  /* EXTI interrupt init*/
+  HAL_NVIC_SetPriority(EXTI9_5_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI9_5_IRQn);
+
+}
+
+/* USER CODE BEGIN 4 */
+
+/* USER CODE END 4 */
+
+/**
+  * @brief  This function is executed in case of error occurrence.
+  * @retval None
+  */
+void Error_Handler(void)
+{
+  /* USER CODE BEGIN Error_Handler_Debug */
+  /* User can add his own implementation to report the HAL error return state */
+
+  /* USER CODE END Error_Handler_Debug */
+}
+
+#ifdef  USE_FULL_ASSERT
+/**
+  * @brief  Reports the name of the source file and the source line number
+  *         where the assert_param error has occurred.
+  * @param  file: pointer to the source file name
+  * @param  line: assert_param error line source number
+  * @retval None
+  */
+void assert_failed(uint8_t *file, uint32_t line)
+{
+  /* USER CODE BEGIN 6 */
+  /* User can add his own implementation to report the file name and line number,
+     tex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
+  /* USER CODE END 6 */
+}
+#endif /* USE_FULL_ASSERT */
+
+/************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
