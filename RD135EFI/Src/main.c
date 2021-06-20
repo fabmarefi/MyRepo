@@ -80,6 +80,8 @@ DMA_HandleTypeDef hdma_usart3_rx;
 #define increment                      1
 #define decrement                      1
 #define min_tps_IDLE									30
+#define V25											     180					
+#define Avg_Slope                      5
 
 uint8_t Cond0=0,Cond1=0,Cond2=0,Cond3=0,Cond4=0,Cond5=0,Cond6=0;
 uint32_t Counter0=0,Counter1=0,Counter2=0,Counter3=0,Counter4=0,Counter5=0,Counter6=0,Counter7=0,Counter8=0,Counter9=0,Counter10=0;
@@ -153,9 +155,15 @@ typedef struct system_info
 		uint32_t nOverflow_RE;
 		uint32_t nOverflow_FE;
 		uint32_t Rising_Edge_Counter;
+		uint8_t VBat;
+		uint8_t VBatRaw;
+		uint8_t VLambda;
+		uint8_t TempBoardRaw;
+		uint8_t TempBoard;
+		uint8_t TempBoardFilt;
 }system_vars;
 
-volatile system_vars scenario={WAKEUP,ACCEL,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,100,100,100,100,100,100,135,AFR_Bensine,100,100,308,1450,0,0,10,10,POS,0,0,0,0};
+volatile system_vars scenario={WAKEUP,ACCEL,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,100,100,100,100,100,100,135,AFR_Bensine,100,100,308,1450,0,0,10,10,POS,0,0,0,0,0,0,0,0,0,0};
 
 //PID control
 typedef struct pid_control
@@ -199,12 +207,18 @@ static void MX_ADC1_Init(void);
 static void MX_USART3_UART_Init(void);
 /* USER CODE BEGIN PFP */
 	
+uint8_t adcArray[7];	
+	
 //Function prototypes	
 void TPS_Treatment(void);	
 void Eng_Status(void);
 void AccelDer(void);	
 void Idle_Management(void);
 void FuelCalc(void);
+void Read_Analog_Sensors(void);
+void Board_Temp(void);
+uint8_t digitalFilter8bits(uint8_t var, uint8_t k);
+void VBatLinearization(void);
 	
 //Led Green (Bluepill)
 void Toggle_LED_Green(void)
@@ -329,7 +343,8 @@ void Set_Ouput_InterruptionTest(void)
 
 void Task_Fast(void)
 {
-    //HAL_IWDG_Init(&hiwdg);	   
+    //HAL_IWDG_Init(&hiwdg);	 
+    Read_Analog_Sensors();  
 	  TPS_Treatment();
 	  AccelDer();
 	  Eng_Status();
@@ -343,9 +358,21 @@ void Task_Medium(void)
 
 void Task_Slow(void)
 {
-		   
+		 Board_Temp(); 
+	   VBatLinearization();
 }
 
+void Board_Temp(void)
+{	
+	  scenario.TempBoardFilt=digitalFilter8bits(scenario.TempBoardRaw, 180);
+		scenario.TempBoard=((V25-scenario.TempBoardFilt)/Avg_Slope)+25;	  
+}	
+
+void VBatLinearization(void)
+{	
+		scenario.VBat=(scenario.VBatRaw*155)/255;
+}	
+	
 void Periodic_task(uint32_t period, void (*func)(void), sched_var var[], uint8_t pos)
 {
     volatile uint32_t counter;
@@ -645,14 +672,18 @@ void TurnOffInjector(void)
 
 uint32_t PrimerPulse(uint8_t temp)
 {
+		uint32_t pulseLength;
+	
 	  if(temp>80)
 		{
-				return (150);
+				pulseLength=150;
 		}			
 		else
 		{
-				return (10);
-    }				
+				pulseLength=10;
+    }		
+
+		return(pulseLength);
 }	
 
 //Detect engine acceleration and classify as: Pos, Neg or stable
@@ -675,6 +706,17 @@ void AccelDer(void)
 
     scenario.Engine_Speed_old=scenario.Engine_Speed;	
 }
+
+void Read_Analog_Sensors(void)
+{		
+		scenario.TPS=adcArray[0];
+		scenario.Tair=adcArray[1];
+	  scenario.Pmap=adcArray[2];
+	  scenario.EngineTemp=adcArray[3];
+	  scenario.VBatRaw=adcArray[4];
+	  scenario.VLambda=adcArray[5];	  
+	  scenario.TempBoardRaw=adcArray[6];
+}	
 
 //Throttle position sensor treatment
 uint8_t funcfastEnrichment(uint8_t TPS)
@@ -1074,6 +1116,8 @@ int main(void)
   MX_USART3_UART_Init();
   /* USER CODE BEGIN 2 */
 	Hardware_Init();
+	HAL_ADC_Start_DMA(&hadc1,(uint32_t *)adcArray,7);
+	
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -1139,7 +1183,7 @@ void SystemClock_Config(void)
     Error_Handler();
   }
   PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_ADC;
-  PeriphClkInit.AdcClockSelection = RCC_ADCPCLK2_DIV6;
+  PeriphClkInit.AdcClockSelection = RCC_ADCPCLK2_DIV8;
   if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK)
   {
     Error_Handler();
@@ -1166,21 +1210,69 @@ static void MX_ADC1_Init(void)
   /** Common config
   */
   hadc1.Instance = ADC1;
-  hadc1.Init.ScanConvMode = ADC_SCAN_DISABLE;
-  hadc1.Init.ContinuousConvMode = DISABLE;
+  hadc1.Init.ScanConvMode = ADC_SCAN_ENABLE;
+  hadc1.Init.ContinuousConvMode = ENABLE;
   hadc1.Init.DiscontinuousConvMode = DISABLE;
   hadc1.Init.ExternalTrigConv = ADC_SOFTWARE_START;
   hadc1.Init.DataAlign = ADC_DATAALIGN_RIGHT;
-  hadc1.Init.NbrOfConversion = 1;
+  hadc1.Init.NbrOfConversion = 7;
   if (HAL_ADC_Init(&hadc1) != HAL_OK)
   {
     Error_Handler();
   }
   /** Configure Regular Channel
   */
-  sConfig.Channel = ADC_CHANNEL_4;
+  sConfig.Channel = ADC_CHANNEL_0;
   sConfig.Rank = ADC_REGULAR_RANK_1;
-  sConfig.SamplingTime = ADC_SAMPLETIME_1CYCLE_5;
+  sConfig.SamplingTime = ADC_SAMPLETIME_239CYCLES_5;
+  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /** Configure Regular Channel
+  */
+  sConfig.Channel = ADC_CHANNEL_1;
+  sConfig.Rank = ADC_REGULAR_RANK_2;
+  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /** Configure Regular Channel
+  */
+  sConfig.Channel = ADC_CHANNEL_2;
+  sConfig.Rank = ADC_REGULAR_RANK_3;
+  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /** Configure Regular Channel
+  */
+  sConfig.Channel = ADC_CHANNEL_3;
+  sConfig.Rank = ADC_REGULAR_RANK_4;
+  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /** Configure Regular Channel
+  */
+  sConfig.Channel = ADC_CHANNEL_4;
+  sConfig.Rank = ADC_REGULAR_RANK_5;
+  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /** Configure Regular Channel
+  */
+  sConfig.Channel = ADC_CHANNEL_5;
+  sConfig.Rank = ADC_REGULAR_RANK_6;
+  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /** Configure Regular Channel
+  */
+  sConfig.Channel = ADC_CHANNEL_TEMPSENSOR;
+  sConfig.Rank = ADC_REGULAR_RANK_7;
   if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
   {
     Error_Handler();
@@ -1205,7 +1297,6 @@ static void MX_TIM2_Init(void)
 
   TIM_ClockConfigTypeDef sClockSourceConfig = {0};
   TIM_MasterConfigTypeDef sMasterConfig = {0};
-  TIM_IC_InitTypeDef sConfigIC = {0};
 
   /* USER CODE BEGIN TIM2_Init 1 */
 
@@ -1225,28 +1316,9 @@ static void MX_TIM2_Init(void)
   {
     Error_Handler();
   }
-  if (HAL_TIM_IC_Init(&htim2) != HAL_OK)
-  {
-    Error_Handler();
-  }
   sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
   sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
   if (HAL_TIMEx_MasterConfigSynchronization(&htim2, &sMasterConfig) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  sConfigIC.ICPolarity = TIM_INPUTCHANNELPOLARITY_RISING;
-  sConfigIC.ICSelection = TIM_ICSELECTION_DIRECTTI;
-  sConfigIC.ICPrescaler = TIM_ICPSC_DIV1;
-  sConfigIC.ICFilter = 3;
-  if (HAL_TIM_IC_ConfigChannel(&htim2, &sConfigIC, TIM_CHANNEL_1) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  sConfigIC.ICPolarity = TIM_INPUTCHANNELPOLARITY_FALLING;
-  sConfigIC.ICSelection = TIM_ICSELECTION_INDIRECTTI;
-  sConfigIC.ICFilter = 0;
-  if (HAL_TIM_IC_ConfigChannel(&htim2, &sConfigIC, TIM_CHANNEL_2) != HAL_OK)
   {
     Error_Handler();
   }
@@ -1419,11 +1491,6 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
-
-  /*Configure GPIO pins : PA3 PA4 PA5 */
-  GPIO_InitStruct.Pin = GPIO_PIN_3|GPIO_PIN_4|GPIO_PIN_5;
-  GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
-  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
   /*Configure GPIO pin : PA6 */
   GPIO_InitStruct.Pin = GPIO_PIN_6;
