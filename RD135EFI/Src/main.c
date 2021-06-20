@@ -42,7 +42,7 @@
 
 /* Private variables ---------------------------------------------------------*/
 ADC_HandleTypeDef hadc1;
-ADC_HandleTypeDef hadc2;
+DMA_HandleTypeDef hdma_adc1;
 
 TIM_HandleTypeDef htim2;
 TIM_HandleTypeDef htim4;
@@ -79,6 +79,7 @@ DMA_HandleTypeDef hdma_usart3_rx;
 #define tps_min												20
 #define increment                      1
 #define decrement                      1
+#define min_tps_IDLE									30
 
 uint8_t Cond0=0,Cond1=0,Cond2=0,Cond3=0,Cond4=0,Cond5=0,Cond6=0;
 uint32_t Counter0=0,Counter1=0,Counter2=0,Counter3=0,Counter4=0,Counter5=0,Counter6=0,Counter7=0,Counter8=0,Counter9=0,Counter10=0;
@@ -154,7 +155,24 @@ typedef struct system_info
 		uint32_t Rising_Edge_Counter;
 }system_vars;
 
-volatile system_vars scenario={WAKEUP,ACCEL,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,100,100,100,100,100,100,100,163,AFR_Bensine,100,308,1450,0,0,10,10,POS,0,0,0,0};
+volatile system_vars scenario={WAKEUP,ACCEL,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,100,100,100,100,100,100,135,AFR_Bensine,100,100,308,1450,0,0,10,10,POS,0,0,0,0};
+
+//PID control
+typedef struct pid_control
+{	
+	  uint16_t Engine_Speed_Setpoint;
+		uint8_t error;
+	  int32_t CumError;		
+		uint16_t kpnum;
+		uint16_t kpdenum;
+		uint16_t kinum;
+		uint16_t kidenum;				
+		int32_t Pwm_PI;		
+		uint16_t Pwm_OUT;		
+		int32_t error_visual;
+}pid_vars;
+
+volatile pid_vars pid_control={1300,0,0,600,1000,20,1000,0,0,0};
 
 /*
 Pmap=100;    //KPa
@@ -178,7 +196,6 @@ static void MX_DMA_Init(void);
 static void MX_TIM2_Init(void);
 static void MX_TIM4_Init(void);
 static void MX_ADC1_Init(void);
-static void MX_ADC2_Init(void);
 static void MX_USART3_UART_Init(void);
 /* USER CODE BEGIN PFP */
 	
@@ -186,6 +203,8 @@ static void MX_USART3_UART_Init(void);
 void TPS_Treatment(void);	
 void Eng_Status(void);
 void AccelDer(void);	
+void Idle_Management(void);
+void FuelCalc(void);
 	
 //Led Green (Bluepill)
 void Toggle_LED_Green(void)
@@ -310,35 +329,21 @@ void Set_Ouput_InterruptionTest(void)
 
 void Task_Fast(void)
 {
-    //HAL_IWDG_Init(&hiwdg);
-	  //Toggle_LED_Red();	 
+    //HAL_IWDG_Init(&hiwdg);	   
 	  TPS_Treatment();
 	  AccelDer();
 	  Eng_Status();
+	  FuelCalc();
 }
 
 void Task_Medium(void)
 {    
-    //Toggle_LED_Blue();	    
+    Idle_Management();
 }
 
 void Task_Slow(void)
 {
-		//static uint8_t teste=0;
-	  //Toggle_LED_Yellow();
-	  /*
-	  if(!teste)
-		{	
-				Set_Ouput_Injector(ON);
-			  teste=1;
-		}	
-	  else
-		{	
-				Set_Ouput_Injector(OFF);
-			  teste=0;
-		}	
-	  */
-	  //Toggle_LED_Green();   
+		   
 }
 
 void Periodic_task(uint32_t period, void (*func)(void), sched_var var[], uint8_t pos)
@@ -359,6 +364,102 @@ void Periodic_task(uint32_t period, void (*func)(void), sched_var var[], uint8_t
         (*func)();
     }
 }
+
+void Crank_Pos_IACV(void)
+{	
+		__HAL_TIM_SET_COMPARE(&htim4,TIM_CHANNEL_1,pid_control.Pwm_OUT);
+}		
+
+void Open_IACV(void)
+{	
+		__HAL_TIM_SET_COMPARE(&htim4,TIM_CHANNEL_1,2069);
+}	
+
+void Close_IACV(void)
+{	
+		__HAL_TIM_SET_COMPARE(&htim4,TIM_CHANNEL_1,69);
+}	
+
+uint16_t funcIdleSetpoint(uint8_t temp)
+{
+		pid_control.Engine_Speed_Setpoint=1300;
+		return(pid_control.Engine_Speed_Setpoint);
+}	
+
+void pid_Init(void)
+{	
+		pid_control.CumError=0;
+		pid_control.Pwm_PI=0;
+		pid_control.Pwm_OUT=0;
+		pid_control.error_visual=0;
+}
+
+void IACV_Control(void)
+{		
+		int32_t Error=0;
+	
+		Error=funcIdleSetpoint(scenario.EngineTemp)-scenario.Engine_Speed;	
+		pid_control.error_visual=Error;
+	
+		if((pid_control.Pwm_PI>=0)&&(pid_control.Pwm_PI<=2800u))
+		{	
+				pid_control.CumError+=Error;
+		}
+		
+		pid_control.Pwm_PI=(((pid_control.kpnum*pid_control.kidenum*Error)+(pid_control.kinum*pid_control.kpdenum*pid_control.CumError))/(pid_control.kpdenum*pid_control.kidenum));				
+  
+		if((pid_control.Pwm_PI>=0)&&(pid_control.Pwm_PI<=2800u))
+		{
+				pid_control.Pwm_OUT=pid_control.Pwm_PI;
+		}  
+		else
+		{	
+				pid_control.Pwm_OUT=0u;
+		}	  	
+	
+		__HAL_TIM_SET_COMPARE(&htim4,TIM_CHANNEL_1,pid_control.Pwm_OUT);
+}
+
+void Learn_test_IACV(void)
+{
+		__HAL_TIM_SET_COMPARE(&htim4,TIM_CHANNEL_1,0);
+}	
+
+void Idle_Management(void)
+{
+		static uint8_t enable_pid=OFF;
+	
+		if(scenario.TPS<min_tps_IDLE)
+		{	
+				switch(scenario.Engine_State)
+				{	
+					  case WAKEUP:
+						case PRIMERINJ:   Learn_test_IACV();
+							
+						case STOP:
+						case CRANK:	
+						case STALL: 			Crank_Pos_IACV();	
+															enable_pid=1;
+															break;
+						
+						case IDLE:    		if(enable_pid)
+															{
+																	enable_pid=OFF;
+																	pid_Init();
+															}	
+						
+															IACV_Control();
+															break;
+													
+						case CRUISE:
+            case OVERSPEED: 	Open_IACV();
+															enable_pid=1;
+															break;
+						
+						default:          break;
+				}		
+	  }						
+}	
 
 // A iterative binary search function. It returns
 // location of x in given array arr[l..r] if present,
@@ -970,7 +1071,6 @@ int main(void)
   MX_TIM2_Init();
   MX_TIM4_Init();
   MX_ADC1_Init();
-  MX_ADC2_Init();
   MX_USART3_UART_Init();
   /* USER CODE BEGIN 2 */
 	Hardware_Init();
@@ -995,7 +1095,7 @@ int main(void)
 		//Timer Management
 		TimerListManagement(timerList);
 		
-    /* USER CODE END WHILE */		
+    /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
   }
@@ -1088,51 +1188,6 @@ static void MX_ADC1_Init(void)
   /* USER CODE BEGIN ADC1_Init 2 */
 
   /* USER CODE END ADC1_Init 2 */
-
-}
-
-/**
-  * @brief ADC2 Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_ADC2_Init(void)
-{
-
-  /* USER CODE BEGIN ADC2_Init 0 */
-
-  /* USER CODE END ADC2_Init 0 */
-
-  ADC_ChannelConfTypeDef sConfig = {0};
-
-  /* USER CODE BEGIN ADC2_Init 1 */
-
-  /* USER CODE END ADC2_Init 1 */
-  /** Common config
-  */
-  hadc2.Instance = ADC2;
-  hadc2.Init.ScanConvMode = ADC_SCAN_DISABLE;
-  hadc2.Init.ContinuousConvMode = DISABLE;
-  hadc2.Init.DiscontinuousConvMode = DISABLE;
-  hadc2.Init.ExternalTrigConv = ADC_SOFTWARE_START;
-  hadc2.Init.DataAlign = ADC_DATAALIGN_RIGHT;
-  hadc2.Init.NbrOfConversion = 1;
-  if (HAL_ADC_Init(&hadc2) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /** Configure Regular Channel
-  */
-  sConfig.Channel = ADC_CHANNEL_3;
-  sConfig.Rank = ADC_REGULAR_RANK_1;
-  sConfig.SamplingTime = ADC_SAMPLETIME_1CYCLE_5;
-  if (HAL_ADC_ConfigChannel(&hadc2, &sConfig) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /* USER CODE BEGIN ADC2_Init 2 */
-
-  /* USER CODE END ADC2_Init 2 */
 
 }
 
@@ -1316,6 +1371,9 @@ static void MX_DMA_Init(void)
   __HAL_RCC_DMA1_CLK_ENABLE();
 
   /* DMA interrupt init */
+  /* DMA1_Channel1_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA1_Channel1_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(DMA1_Channel1_IRQn);
   /* DMA1_Channel3_IRQn interrupt configuration */
   HAL_NVIC_SetPriority(DMA1_Channel3_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(DMA1_Channel3_IRQn);
@@ -1341,8 +1399,7 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_6
-                          |GPIO_PIN_7, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_6|GPIO_PIN_7, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_12
@@ -1363,8 +1420,13 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : PA0 PA1 PA2 PA6 */
-  GPIO_InitStruct.Pin = GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_6;
+  /*Configure GPIO pins : PA3 PA4 PA5 */
+  GPIO_InitStruct.Pin = GPIO_PIN_3|GPIO_PIN_4|GPIO_PIN_5;
+  GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : PA6 */
+  GPIO_InitStruct.Pin = GPIO_PIN_6;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
