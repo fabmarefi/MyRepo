@@ -55,10 +55,12 @@ DMA_HandleTypeDef hdma_usart3_rx;
 #define OFF                            0
 #define ON                             1
 #define nTimer                        16
-#define TMR2_16bits                65536u
-#define EngineSpeedPeriod_Min     785455u     //100rpm
-#define EngineSpeedPeriod_Max       5236u     //15000rpm
-#define RPM_const               78545455u
+#define TMR2_16bits               65536u
+#define EngineSpeedPeriod_Min    785455u     //100rpm
+#define EngineSpeedPeriod_Max      5236u     //15000rpm
+#define RPM_const              78545455u
+#define PWM_0                          0
+#define PWM_100                     1001
 
 #define AFR_Bensine                  132
 #define AFR_Ethanol                   90
@@ -86,6 +88,7 @@ DMA_HandleTypeDef hdma_usart3_rx;
 #define tps_max                      190
 #define lambdaVoltLeanTheshould       30
 #define lambdaVoltRichTheshould       70
+#define InjectorMaxTime              850   //85% time
 
 uint8_t Cond0=0,Cond1=0,Cond2=0,Cond3=0,Cond4=0,Cond5=0,Cond6=0;
 uint32_t Counter0=0,Counter1=0,Counter2=0,Counter3=0,Counter4=0,Counter5=0,Counter6=0,Counter7=0,Counter8=0,Counter9=0,Counter10=0;
@@ -114,7 +117,7 @@ typedef struct TimerStruct
 }timerSchedtype;
 
 timerSchedtype timerList[nTimer]; //={{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0}};
-
+ 
 typedef struct system_info
 {
         enum EngineState Engine_State;         //WAKEUP
@@ -137,11 +140,14 @@ typedef struct system_info
         uint8_t  Update_calc;                  //TRUE
         uint8_t  LambdaRequested;              //100
 
+	      uint32_t Airmass;                      //0
         uint8_t  Voleff;                       //100
         uint8_t  Displacement;                 //135
         uint8_t  AFRstoich;                    //132
-        uint16_t Injectormassflow;             //0
+				uint16_t InjectorDeadTime;             //50  (1ms)
+        uint32_t Injectormassflow;             //0
         uint32_t PW_us;                        //0
+				uint32_t PW_percent;                   //0
         uint32_t Fuelmass;                     //0
 
         uint32_t nOverflow;                    //0
@@ -159,6 +165,7 @@ typedef struct system_info
         uint8_t  overspeedTerm;                //100
         uint8_t  crankTerm;                    //100
         uint8_t  lambdaCorrectTerm;            //100
+				uint8_t  TotalTerm;                    //100
 
         uint8_t  VBatRaw;                      //0
         uint8_t  VBatFilt;                     //0
@@ -189,7 +196,7 @@ typedef struct system_info
         uint8_t  EngineTemp;                   //0
 }system_vars;
 
-volatile system_vars scenario={WAKEUP,STABLE,0,0,0,0,0,0,0,0,0,0,0,0,RICH,TRUE,100,100,135,132,0,0,0,0,0,0,10,10,0,0,0,1,100,100,100,100,100,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+volatile system_vars scenario={WAKEUP,STABLE,0,0,0,0,0,0,0,0,0,0,0,0,RICH,TRUE,100,0,100,135,132,50,0,0,0,0,0,0,0,10,10,0,0,0,1,100,100,100,100,100,100,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
 
 //PID control
 typedef struct pid_control
@@ -207,6 +214,10 @@ typedef struct pid_control
 }pid_vars;
 
 volatile pid_vars pid_control={1300,0,0,600,1000,20,1000,0,0,0};
+
+uint16_t InjectorDeadTimeArray[8]={50,60,70,90,100,150,250,300};        
+
+static uint32_t a,b,c,d,e,f,g,h;
 
 /*
 PMap=100;    //KPa
@@ -252,6 +263,8 @@ void EngineTempLinearization(void);
 void TairLinearization(void);
 void LambdaCorrectionFunc(uint8_t lambdaRequested, uint8_t lambdaMeasured);
 uint8_t funcLambda(uint8_t PMap,uint16_t Engine_Speed);
+void InjectorDeadTimeCalc(void);
+void Injector_CMD(uint16_t pwm);
 
 //Led Green (Bluepill)
 void Toggle_LED_Green(void)
@@ -367,6 +380,7 @@ void Hardware_Init(void)
         Set_Output_LED_Yellow(OFF);
         Set_Ouput_Pump(OFF);
         Set_Ouput_Injector(OFF);
+	      Injector_CMD(0);
 }
 
 void Set_Ouput_InterruptionTest(void)
@@ -388,8 +402,9 @@ void Task_Fast(void)
         EngineTempLinearization();
         TairLinearization();
 
-        //Fuel calculation        
+        //Fuel calculation          	
         AccelDer();
+	      InjectorDeadTimeCalc();
         Eng_Status();
         
         FuelCalc();
@@ -428,6 +443,7 @@ void TPSLinearization(void)
 void MAPLinearization(void)
 {
         scenario.PMap=(scenario.PMapRaw*110)/255;
+	      scenario.PMap=101;
 }
 
 void LambdaLinearization(void)
@@ -443,7 +459,13 @@ void EngineTempLinearization(void)
 void TairLinearization(void)
 {
         scenario.Tair=(scenario.TairRaw*150)/255;
+	      scenario.Tair=45;
 }
+
+void InjectorDeadTimeCalc(void)
+{
+				scenario.InjectorDeadTime=InjectorDeadTimeArray[0];
+}	
 
 void Periodic_task(uint32_t period, void (*func)(void), sched_var var[], uint8_t pos)
 {
@@ -741,6 +763,7 @@ void TurnOffPump(void)
 void TurnOffInjector(void)
 {
     Set_Ouput_Injector(OFF);
+	  Injector_CMD(PWM_0);
 }
 
 uint32_t PrimerPulse(uint8_t temp)
@@ -958,9 +981,24 @@ uint8_t funcCycles(uint8_t temp)
     return (100);
 }
 
+void Injector_CMD(uint16_t pwm)
+{	
+		__HAL_TIM_SET_COMPARE(&htim4,TIM_CHANNEL_1,pwm);
+}	
+
+uint32_t Saturation(uint32_t var,uint32_t sat)
+{	
+		if(var>sat)
+		{	
+				var=sat;
+		}	
+
+    return(var);		
+}
+
 void FuelCalc(void)
 {
-    if(scenario.Engine_State<CRANK)
+	  if(scenario.Engine_State<CRANK)
 		{	
 				scenario.PW_us=0;
 		}	
@@ -974,7 +1012,15 @@ void FuelCalc(void)
         else
         {
             //After achieve Engine.State=Crank Enable to inject fixed fuel amount
-            scenario.Fuelmass=(34847/1000000)*((scenario.PMap*scenario.Displacement)/((scenario.AFRstoich/100)*scenario.Tair))*(scenario.warmUpTerm/100);
+            scenario.Airmass=((100000*scenario.PMap*scenario.Displacement)/((28705*(scenario.Tair+273))/1000))*(scenario.Voleff/100);
+						scenario.TotalTerm=(scenario.warmUpTerm*scenario.fastEnrichmentTerm*scenario.crankTerm)/10000;
+						scenario.Fuelmass=(100*scenario.TotalTerm*scenario.Airmass)/scenario.AFRstoich;
+						scenario.Injectormassflow=(scenario.Fuelmass*scenario.Engine_Speed)/3000;		//g/20ms
+						scenario.PW_percent=scenario.Injectormassflow/150;		
+						scenario.PW_us=(scenario.PW_percent*InjectorMaxTime)/1000;
+						scenario.PW_us=scenario.PW_us+scenario.InjectorDeadTime;
+						scenario.PW_us=Saturation(scenario.PW_us,InjectorMaxTime);
+						Injector_CMD(scenario.PW_us);			
         }
 		}	
 		else if(scenario.Engine_State>CRANK)
@@ -998,20 +1044,62 @@ void FuelCalc(void)
 				{
 						scenario.overspeedTerm=0;
 					  scenario.PW_us=0;
-					  __HAL_TIM_SET_COMPARE(&htim4,TIM_CHANNEL_1,scenario.PW_us);
+						Injector_CMD(scenario.PW_us);
 					  return;						
 				}
 
         scenario.Voleff=funcVoleff(scenario.PMap,scenario.Engine_Speed);
         scenario.LambdaRequested=funcLambda(scenario.PMap,scenario.Engine_Speed);
-				LambdaCorrectionFunc(scenario.LambdaRequested,scenario.Lambda);
+				LambdaCorrectionFunc(scenario.LambdaRequested,scenario.Lambda);			
 				
-				scenario.Fuelmass=(34847/1000000)*((scenario.PMap*(scenario.Voleff/100)*scenario.Displacement*(scenario.warmUpTerm/100)*(scenario.fastEnrichmentTerm/100)*scenario.overspeedTerm*scenario.cuttOffTerm*(scenario.lambdaCorrectTerm/100))/((scenario.AFRstoich/100)*(scenario.Lambda/100)*scenario.Tair));
-			  scenario.PW_us=(scenario.Fuelmass*600000000)/scenario.Injectormassflow;
-				__HAL_TIM_SET_COMPARE(&htim4,TIM_CHANNEL_1,25);
-		}	
-		
-		
+				scenario.PMap=101;
+				scenario.Displacement=135;
+				scenario.Tair=45;
+				scenario.Voleff=100;
+				scenario.warmUpTerm=100;
+				scenario.fastEnrichmentTerm=100;
+				scenario.crankTerm=100;
+				scenario.lambdaCorrectTerm=100;
+				scenario.AFRstoich=132;
+				scenario.Engine_Speed=3000;
+				
+				scenario.Airmass=((100000*scenario.PMap*scenario.Displacement)/((28705*(scenario.Tair+273))/1000))*(scenario.Voleff/100);
+				scenario.TotalTerm=(scenario.warmUpTerm*scenario.fastEnrichmentTerm*scenario.lambdaCorrectTerm)/10000;
+				scenario.Fuelmass=(100*scenario.TotalTerm*scenario.Airmass)/scenario.AFRstoich;
+				scenario.Fuelmass=(scenario.Fuelmass*scenario.cuttOffTerm*scenario.overspeedTerm)/100;		//due overspeedTerm
+				scenario.Injectormassflow=(scenario.Fuelmass*scenario.Engine_Speed)/3000;		//g/20ms
+				scenario.PW_percent=scenario.Injectormassflow/150;		
+				scenario.PW_us=(scenario.PW_percent*InjectorMaxTime)/1000;
+				scenario.PW_us=scenario.PW_us+scenario.InjectorDeadTime;
+				scenario.PW_us=Saturation(scenario.PW_us,InjectorMaxTime);
+				Injector_CMD(scenario.PW_us);			
+		}			
+		/*
+		scenario.PMap=101;
+		scenario.Displacement=135;
+		scenario.Tair=45;
+		scenario.Voleff=100;
+		scenario.warmUpTerm=100;
+		scenario.fastEnrichmentTerm=100;
+		scenario.crankTerm=100;
+		scenario.lambdaCorrectTerm=100;
+		scenario.AFRstoich=132;
+		scenario.Engine_Speed=3000;
+				
+		scenario.Airmass=((100000*scenario.PMap*scenario.Displacement)/((28705*(scenario.Tair+273))/1000))*(scenario.Voleff/100);
+		scenario.TotalTerm=(scenario.warmUpTerm*scenario.fastEnrichmentTerm*scenario.crankTerm*scenario.lambdaCorrectTerm)/1000000;
+		scenario.Fuelmass=(scenario.TotalTerm*scenario.Airmass)/scenario.AFRstoich;
+		//scenario.Fuelmass=(100*scenario.Airmass)/scenario.AFRstoich;
+		//scenario.Fuelmass=(scenario.Fuelmass*scenario.warmUpTerm*scenario.fastEnrichmentTerm)/10000;
+		//scenario.Fuelmass=(scenario.Fuelmass*scenario.crankTerm*scenario.lambdaCorrectTerm)/10000;				
+		scenario.Fuelmass=(scenario.Fuelmass*scenario.cuttOffTerm*scenario.overspeedTerm)/100;		//due overspeedTerm
+		scenario.Injectormassflow=(scenario.Fuelmass*scenario.Engine_Speed)/3000;		//g/20ms
+		scenario.PW_percent=scenario.Injectormassflow/150;		
+		scenario.PW_us=(scenario.PW_percent*InjectorMaxTime)/1000;
+		scenario.PW_us=scenario.PW_us+scenario.InjectorDeadTime;
+		scenario.PW_us=Saturation(scenario.PW_us,InjectorMaxTime);
+		Injector_CMD(scenario.PW_us);						
+		*/
 }
 
 //Will running periodically with period equal 50ms (20 times per second)
@@ -1032,6 +1120,7 @@ void Eng_Status(void)
 												{
 														Cond0=FALSE;													  
 														Set_Ouput_Injector(ON);
+													  Injector_CMD(PWM_100);
 														//setTimeoutHookUp(Timer0,PrimerPulse(scenario.EngineTemp),&TurnOffInjector);
 													  setTimeoutHookUp(Timer0,PrimerPulse(90),&TurnOffInjector);
 														scenario.Engine_State=PRIMERINJ;
@@ -1191,6 +1280,7 @@ int main(void)
   /* MCU Configuration--------------------------------------------------------*/
 
   /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
+
   HAL_Init();
 
   /* USER CODE BEGIN Init */
