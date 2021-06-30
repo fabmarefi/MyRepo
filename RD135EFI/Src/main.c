@@ -78,7 +78,7 @@ DMA_HandleTypeDef hdma_usart3_rx;
 #define threshould                  2500
 #define tfastenrich                 1000
 #define tfastenleanment              200
-#define tps_min_cutoff                20
+#define tps_min_cutoff                45
 #define increment                      1
 #define decrement                      1
 #define min_tps_IDLE                  30
@@ -90,10 +90,10 @@ DMA_HandleTypeDef hdma_usart3_rx;
 #define lambdaVoltRichTheshould       70
 #define InjectorMaxTime              800   //80% time
 #define R_div_Mair                    29
+#define TimeToGetInCutoff           1000
 
 uint8_t Cond0=0,Cond1=0,Cond2=0,Cond3=0,Cond4=0,Cond5=0,Cond6=0;
 uint32_t Counter0=0,Counter1=0,Counter2=0,Counter3=0,Counter4=0,Counter5=0,Counter6=0,Counter7=0,Counter8=0,Counter9=0,Counter10=0;
-uint8_t pulseDetected=0;
 
 //Scheduller
 typedef struct Scheduler
@@ -121,10 +121,13 @@ timerSchedtype timerList[nTimer]; //={{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0
 
 typedef struct system_info
 {
+
+		uint8_t  EnabLambdaCtrl;               //1
         enum EngineState Engine_State;         //WAKEUP
         enum Accel Acceleration;               //STABLE
         uint16_t Engine_Speed_old;             //0
         uint16_t Engine_Speed;                 //0
+	    uint8_t  pulseDetected;                //0
         int16_t  deltaEngineSpeed;             //0
         uint16_t engineSpeedPred;              //0
         uint16_t engineSpeedFiltered;          //0
@@ -140,17 +143,17 @@ typedef struct system_info
         enum Lambda LambDir;                   //RICH
         uint8_t  Update_calc;                  //TRUE
         uint8_t  LambdaRequested;              //100
-	      uint8_t  LambdaRequestedCrank;         //100
+	    uint8_t  LambdaRequestedCrank;         //100
 
-	      uint32_t Airmass;                      //0
+	    uint32_t Airmass;                      //0
         uint8_t  Voleff;                       //100
-				uint8_t  VoleffCrank;                  //40
+		uint8_t  VoleffCrank;                  //40
         uint8_t  Displacement;                 //135
         uint8_t  AFRstoich;                    //132
-				uint16_t InjectorDeadTime;             //50  (1ms)
+		uint16_t InjectorDeadTime;             //50  (1ms)
         uint32_t Injectormassflow;             //0
         uint32_t PW_us;                        //0
-				uint32_t PW_percent;                   //0
+		uint32_t PW_percent;                   //0
         uint32_t Fuelmass;                     //0
 
         uint32_t nOverflow;                    //0
@@ -168,7 +171,7 @@ typedef struct system_info
         uint8_t  overspeedTerm;                //100
         uint8_t  crankTerm;                    //100
         uint8_t  lambdaCorrectTerm;            //100
-				uint16_t TotalTerm;                    //100
+		uint16_t TotalTerm;                    //100
 
         uint8_t  VBatRaw;                      //0
         uint8_t  VBatFilt;                     //0
@@ -199,21 +202,21 @@ typedef struct system_info
         uint8_t  EngineTemp;                   //0
 }system_vars;
 
-volatile system_vars scenario={WAKEUP,STABLE,0,0,0,0,0,0,0,0,0,0,0,0,RICH,TRUE,100,100,0,100,40,135,132,50,0,0,0,0,0,0,0,10,10,0,0,0,1,100,100,100,100,100,100,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+volatile system_vars scenario={1,WAKEUP,STABLE,0,0,0,0,0,0,0,0,0,0,0,0,0,RICH,TRUE,100,100,0,100,40,135,132,50,0,0,0,0,0,0,0,10,10,0,0,0,1,100,100,100,100,100,100,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
 
 //PID control
 typedef struct pid_control
 {
         uint16_t Engine_Speed_Setpoint;
-        uint8_t error;
-        int32_t CumError;
+        uint8_t  error;
+        int32_t  CumError;
         uint16_t kpnum;
         uint16_t kpdenum;
         uint16_t kinum;
         uint16_t kidenum;
-        int32_t Pwm_PI;
+        int32_t  Pwm_PI;
         uint16_t Pwm_OUT;
-        int32_t error_visual;
+        int32_t  error_visual;
 }pid_vars;
 
 volatile pid_vars pid_control={1300,0,0,600,1000,20,1000,0,0,0};
@@ -221,19 +224,6 @@ volatile pid_vars pid_control={1300,0,0,600,1000,20,1000,0,0,0};
 uint16_t InjectorDeadTimeArray[8]={50,60,70,90,100,150,250,300};
 
 static uint32_t a,b,c,d,e,f,g,h;
-
-/*
-PMap=100;    //KPa
-Voleff=100;  //from table
-Displacement=163;
-AFR=132;
-Lambda=100;
-Tair=308;  //273+35
-Injectormassflow=1450;
-
-Fuelmass=(34847/1000000)*((PMap*Voleff*Displacement)/(AFR*Lambda*Tair));
-PW_us=(Fuelmass*600000000)/Injectormassflow;
-*/
 
 /* USER CODE END PV */
 
@@ -272,19 +262,19 @@ void Injector_CMD(uint16_t pwm);
 //Led Green (Bluepill)
 void Toggle_LED_Green(void)
 {
-    HAL_GPIO_TogglePin(GPIOC,GPIO_PIN_13);
+	HAL_GPIO_TogglePin(GPIOC,GPIO_PIN_13);
 }
 
 void Set_Output_LED_Green(uint8_t	Value)
 {
-		if(Value==ON)
-		{
-				HAL_GPIO_WritePin(GPIOC,GPIO_PIN_13,GPIO_PIN_RESET);
-		}
-		else
-		{
-				HAL_GPIO_WritePin(GPIOC,GPIO_PIN_13,GPIO_PIN_SET);
-		}
+	if(Value==ON)
+	{
+		HAL_GPIO_WritePin(GPIOC,GPIO_PIN_13,GPIO_PIN_RESET);
+	}
+	else
+	{
+		HAL_GPIO_WritePin(GPIOC,GPIO_PIN_13,GPIO_PIN_SET);
+	}
 }
 
 //Led Red
@@ -295,14 +285,14 @@ void Toggle_LED_Red(void)
 
 void Set_Output_LED_Red(uint8_t	Value)
 {
-		if(Value==ON)
-		{
-				HAL_GPIO_WritePin(GPIOB,GPIO_PIN_12,GPIO_PIN_RESET);
-		}
-		else
-		{
-				HAL_GPIO_WritePin(GPIOB,GPIO_PIN_12,GPIO_PIN_SET);
-		}
+	if(Value==ON)
+	{
+		HAL_GPIO_WritePin(GPIOB,GPIO_PIN_12,GPIO_PIN_RESET);
+	}
+	else
+	{
+		HAL_GPIO_WritePin(GPIOB,GPIO_PIN_12,GPIO_PIN_SET);
+	}
 }
 
 //Led Blue
@@ -313,14 +303,14 @@ void Toggle_LED_Blue(void)
 
 void Set_Output_LED_Blue(uint8_t Value)
 {
-		if(Value==ON)
-		{
-				HAL_GPIO_WritePin(GPIOB,GPIO_PIN_13,GPIO_PIN_RESET);
-		}
-		else
-		{
-				HAL_GPIO_WritePin(GPIOB,GPIO_PIN_13,GPIO_PIN_SET);
-		}
+	if(Value==ON)
+	{
+		HAL_GPIO_WritePin(GPIOB,GPIO_PIN_13,GPIO_PIN_RESET);
+	}
+	else
+	{
+		HAL_GPIO_WritePin(GPIOB,GPIO_PIN_13,GPIO_PIN_SET);
+	}
 }
 
 //Led Yellow
@@ -331,42 +321,49 @@ void Toggle_LED_Yellow(void)
 
 void Set_Output_LED_Yellow(uint8_t Value)
 {
-		if(Value==ON)
-		{
-				HAL_GPIO_WritePin(GPIOB,GPIO_PIN_14,GPIO_PIN_RESET);
-		}
-		else
-		{
-				HAL_GPIO_WritePin(GPIOB,GPIO_PIN_14,GPIO_PIN_SET);
-		}
+	if(Value==ON)
+	{
+		HAL_GPIO_WritePin(GPIOB,GPIO_PIN_14,GPIO_PIN_RESET);
+	}
+	else
+	{
+		HAL_GPIO_WritePin(GPIOB,GPIO_PIN_14,GPIO_PIN_SET);
+	}
 }
 
+//Pump
 void Set_Ouput_Pump(uint8_t Value)
 {
     if (Value==ON)
     {
         //HAL_GPIO_WritePin(GPIOB,GPIO_PIN_6,GPIO_PIN_SET);
-			  HAL_GPIO_WritePin(GPIOB,GPIO_PIN_14,GPIO_PIN_RESET);
+		HAL_GPIO_WritePin(GPIOB,GPIO_PIN_14,GPIO_PIN_RESET);
     }
     else
     {
         //HAL_GPIO_WritePin(GPIOB,GPIO_PIN_6,GPIO_PIN_RESET);
-			  HAL_GPIO_WritePin(GPIOB,GPIO_PIN_14,GPIO_PIN_SET);
+		HAL_GPIO_WritePin(GPIOB,GPIO_PIN_14,GPIO_PIN_SET);
     }
+}
+
+void TurnOffPump(void)
+{
+    Set_Ouput_Pump(OFF);
 }
 
 uint8_t Read_Output_Pump(void)
 {
-        //return(HAL_GPIO_ReadPin(GPIOB,GPIO_PIN_6));
-        return(!HAL_GPIO_ReadPin(GPIOB,GPIO_PIN_14));
+    //return(HAL_GPIO_ReadPin(GPIOB,GPIO_PIN_6));
+    return(!HAL_GPIO_ReadPin(GPIOB,GPIO_PIN_14));
 }
 
+//Injector
 void Set_Ouput_Injector(uint8_t Value)
 {
     if (Value == ON)
     {
-        //HAL_GPIO_WritePin(GPIOA,GPIO_PIN_2,GPIO_PIN_SET);
-        HAL_GPIO_WritePin(GPIOB,GPIO_PIN_13,GPIO_PIN_RESET);
+		//HAL_GPIO_WritePin(GPIOA,GPIO_PIN_2,GPIO_PIN_SET);
+		HAL_GPIO_WritePin(GPIOB,GPIO_PIN_13,GPIO_PIN_RESET);
     }
     else
     {
@@ -375,217 +372,26 @@ void Set_Ouput_Injector(uint8_t Value)
     }
 }
 
+void Injector_CMD(uint16_t pwm)
+{
+    __HAL_TIM_SET_COMPARE(&htim4,TIM_CHANNEL_1,pwm);
+}
+
+void TurnOffInjector(void)
+{
+    Set_Ouput_Injector(OFF);
+	Injector_CMD(PWM_0);
+}
+
 void Hardware_Init(void)
 {
-        Set_Output_LED_Green(OFF);
-        Set_Output_LED_Red(OFF);
-        Set_Output_LED_Blue(OFF);
-        Set_Output_LED_Yellow(OFF);
-        Set_Ouput_Pump(OFF);
-        Set_Ouput_Injector(OFF);
-        Injector_CMD(0);
-}
-
-void Set_Ouput_InterruptionTest(void)
-{
-        HAL_GPIO_TogglePin(GPIOA,GPIO_PIN_6);
-}
-
-void Task_Fast(void)
-{
-        //HAL_IWDG_Init(&hiwdg);
-
-        //Read analog sensors
-        Read_Analog_Sensors();
-
-        //Treat analog sensors
-        TPSLinearization();
-        MAPLinearization();
-        LambdaLinearization();
-        EngineTempLinearization();
-        TairLinearization();
-
-        //Fuel calculation
-        AccelDer();
-        InjectorDeadTimeCalc();
-        Eng_Status();
-        FuelCalc();
-        
-        //Update the pwm setpoint to guarantee the fuel flow required
-        Injector_CMD(scenario.PW_us);
-}
-
-void Task_Medium(void)
-{
-        Idle_Management();
-}
-
-void Task_Slow(void)
-{
-        Board_Temp();
-        VBatLinearization();
-}
-
-void Board_Temp(void)
-{
-        //Needs to apply a filter due the sensor characteristics
-        scenario.TempBoardFilt=digitalFilter8bits(scenario.TempBoardRaw,180);
-        scenario.TempBoard=((V25-scenario.TempBoardFilt)/Avg_Slope)+25;
-}
-
-void VBatLinearization(void)
-{
-        //Needs to apply a filter besause the real circuit doesn´t have one...
-        scenario.VBatFilt=digitalFilter8bits(scenario.VBatRaw,180);
-        scenario.VBat=(scenario.VBatFilt*150)/255;
-}
-
-void TPSLinearization(void)
-{
-        scenario.TPS=(100*(scenario.TPSRaw-tps_min))/(tps_max-tps_min);
-}
-
-void MAPLinearization(void)
-{
-        scenario.PMap=(scenario.PMapRaw*110)/255;
-	      scenario.PMap=101;
-}
-
-void LambdaLinearization(void)
-{
-        scenario.Lambda=(scenario.VLambdaRaw*100)/85;
-}
-
-void EngineTempLinearization(void)
-{
-        scenario.EngineTemp=(scenario.EngineTempRaw*180)/255;
-}
-
-void TairLinearization(void)
-{
-        scenario.Tair=(scenario.TairRaw*150)/255;
-	      scenario.Tair=45;
-}
-
-void InjectorDeadTimeCalc(void)
-{
-				scenario.InjectorDeadTime=InjectorDeadTimeArray[0];
-}
-
-void Periodic_task(uint32_t period, void (*func)(void), sched_var var[], uint8_t pos)
-{
-    volatile uint32_t counter;
-
-    counter = HAL_GetTick();
-
-    if(var[pos].program == FALSE)
-    {
-        var[pos].target_time = counter+period;
-        var[pos].program = TRUE;
-    }
-
-    if(counter>=var[pos].target_time)
-    {
-        var[pos].program = FALSE;
-        (*func)();
-    }
-}
-
-void Crank_Pos_IACV(void)
-{
-        __HAL_TIM_SET_COMPARE(&htim4,TIM_CHANNEL_1,pid_control.Pwm_OUT);
-}
-
-void Open_IACV(void)
-{
-		__HAL_TIM_SET_COMPARE(&htim4,TIM_CHANNEL_1,2069);
-}
-
-void Close_IACV(void)
-{
-		__HAL_TIM_SET_COMPARE(&htim4,TIM_CHANNEL_1,69);
-}
-
-uint16_t funcIdleSetpoint(uint8_t temp)
-{
-		//Here I need to create an array Engine Speed Target in function of Engine Temperature
-		pid_control.Engine_Speed_Setpoint=1300;
-		return(pid_control.Engine_Speed_Setpoint);
-}
-
-void pid_Init(void)
-{
-		pid_control.CumError=0;
-		pid_control.Pwm_PI=0;
-		pid_control.Pwm_OUT=0;
-		pid_control.error_visual=0;
-}
-
-void IACV_Control(void)
-{
-		int32_t Error=0;
-
-		Error=funcIdleSetpoint(scenario.EngineTemp)-scenario.Engine_Speed;
-		pid_control.error_visual=Error;
-
-		if((pid_control.Pwm_PI>=0)&&(pid_control.Pwm_PI<=2800u))
-		{
-				pid_control.CumError+=Error;
-		}
-
-		pid_control.Pwm_PI=(((pid_control.kpnum*pid_control.kidenum*Error)+(pid_control.kinum*pid_control.kpdenum*pid_control.CumError))/(pid_control.kpdenum*pid_control.kidenum));
-
-		if((pid_control.Pwm_PI>=0)&&(pid_control.Pwm_PI<=2800u))
-		{
-				pid_control.Pwm_OUT=pid_control.Pwm_PI;
-		}
-		else
-		{
-				pid_control.Pwm_OUT=0u;
-		}
-
-		__HAL_TIM_SET_COMPARE(&htim4,TIM_CHANNEL_1,pid_control.Pwm_OUT);
-}
-
-void Learn_test_IACV(void)
-{
-		__HAL_TIM_SET_COMPARE(&htim4,TIM_CHANNEL_1,0);
-}
-
-void Idle_Management(void)
-{
-		static uint8_t enable_pid=OFF;
-
-		if(scenario.TPS<min_tps_IDLE)
-		{
-				switch(scenario.Engine_State)
-				{
-					  case WAKEUP:
-						case PRIMERINJ:   Learn_test_IACV();
-
-						case STOP:
-						case CRANK:
-						case STALL: 			Crank_Pos_IACV();
-															enable_pid=1;
-															break;
-
-						case IDLE:    		if(enable_pid)
-															{
-																	enable_pid=OFF;
-																	pid_Init();
-															}
-
-															IACV_Control();
-															break;
-
-						case CRUISE:
-            case OVERSPEED: 	Open_IACV();
-															enable_pid=1;
-															break;
-
-						default:          break;
-				}
-	  }
+    Set_Output_LED_Green(OFF);
+    Set_Output_LED_Red(OFF);
+    Set_Output_LED_Blue(OFF);
+    Set_Output_LED_Yellow(OFF);
+    Set_Ouput_Pump(OFF);
+    Set_Ouput_Injector(OFF);
+    Injector_CMD(PWM_0);
 }
 
 // A iterative binary search function. It returns
@@ -653,25 +459,14 @@ uint8_t linearInterpolation(uint16_t value, volatile uint16_t x_array[], volatil
     }
 }
 
-void Engine_STOP_test(void)
+uint32_t Saturation(uint32_t var,uint32_t sat)
 {
-    static uint8_t program;
-    static uint32_t initial_value;
+    if(var>sat)
+    {
+        var=sat;
+    }
 
-    if(program == FALSE)
-    {
-        initial_value = scenario.Rising_Edge_Counter;
-        program = TRUE;
-    }
-    else
-    {
-        if(scenario.Rising_Edge_Counter == initial_value)
-        {
-            scenario.Rising_Edge_Counter = 0u;
-            scenario.Engine_Speed = 0u;
-            program = FALSE;
-        }
-    }
+    return(var);
 }
 
 uint8_t digitalFilter8bits(uint8_t var, uint8_t k)
@@ -728,7 +523,7 @@ void TimerListManagement(timerSchedtype timerList[])
         {
             if(HAL_GetTick()>=timerList[line].target_time)
             {
-							  timerList[line].target_time=0;
+				timerList[line].target_time=0;
                 timerList[line].output=TRUE;
                 timerList[line].func_pointer();
             }
@@ -760,16 +555,21 @@ uint8_t Timeout_ms(uint8_t Condition,uint32_t *timer,uint32_t period)
     return (TimeoutResp);
 }
 
-void TurnOffPump(void)
-{
-    Set_Ouput_Pump(OFF);
-}
-
-void TurnOffInjector(void)
-{
-    Set_Ouput_Injector(OFF);
-	  Injector_CMD(PWM_0);
-}
+void PulseDetection(void)
+{	
+	  static uint32_t CounterPulseNow, CounterPulseOld;
+	
+		if((CounterPulseNow-CounterPulseOld)>=1)
+		{	
+			scenario.pulseDetected=1;
+		}	
+		else
+		{	
+			scenario.pulseDetected=0;
+		}		
+		
+		CounterPulseOld=CounterPulseNow;
+}	
 
 uint32_t PrimerPulse(uint8_t temp)
 {
@@ -787,421 +587,9 @@ uint32_t PrimerPulse(uint8_t temp)
     return(pulseLength);
 }
 
-//Detect engine acceleration and classify as: Pos, Neg or stable
-void AccelDer(void)
+void Set_Ouput_InterruptionTest(void)
 {
-    scenario.deltaEngineSpeed=scenario.Engine_Speed-scenario.Engine_Speed_old;
-
-    if(scenario.deltaEngineSpeed>accel_rate)
-    {
-        scenario.Acceleration=ACCEL;
-    }
-    else if(scenario.deltaEngineSpeed<decel_rate)
-    {
-        scenario.Acceleration=DECEL;
-    }
-    else
-    {
-        scenario.Acceleration=STABLE;
-    }
-
-    scenario.Engine_Speed_old=scenario.Engine_Speed;
-}
-
-void Read_Analog_Sensors(void)
-{
-    scenario.TPSRaw=adcArray[0];
-    scenario.TairRaw=adcArray[1];
-    scenario.PMapRaw=adcArray[2];
-    scenario.EngineTempRaw=adcArray[3];
-    scenario.VBatRaw=adcArray[4];
-    scenario.VLambdaRaw=adcArray[5];
-    scenario.TempBoardRaw=adcArray[6];
-}
-
-//Throttle position sensor treatment
-uint8_t funcfastEnrichment(uint8_t TPS)
-{
-    return(120);
-}
-
-uint8_t funcfastEnleanment(uint8_t TPS)
-{
-    return(80);
-}
-
-/* Gas treatment */
-//create a automatic learning to get tps_min and tps_max
-void TPS_Treatment(void)
-{
-    scenario.deltaTPS=scenario.TPS-scenario.TPS_old;
-
-    if(scenario.deltaTPS>quickCmdPos)
-    {
-        //Enrichment fuel based in a table deltaTPS(temp)
-        Set_Output_LED_Red(ON);
-        scenario.fastEnrichmentTerm=funcfastEnrichment(scenario.deltaTPS);   //1,2
-        Cond5=TRUE;
-    }
-    else if(scenario.deltaTPS<quickCmdNeg)
-    {
-        //En-leanment fuel based in a table deltaTPS(temp)
-        scenario.fastEnrichmentTerm=funcfastEnleanment(scenario.deltaTPS);   //0,8
-        Cond6=TRUE;
-    }
-
-    if(Timeout_ms(Cond5,&Counter5,tfastenrich))
-    {
-        Cond5=FALSE;
-        Set_Output_LED_Red(OFF);
-        scenario.fastEnrichmentTerm=100;
-    }
-    else if(Timeout_ms(Cond6,&Counter6,tfastenleanment))
-    {
-        Cond6=FALSE;
-        scenario.fastEnrichmentTerm=100;
-    }
-
-    //Pay attention, this function can overwrite enrichment function...
-    if((scenario.TPS<tps_min_cutoff)&&(scenario.Engine_Speed>threshould))
-    {
-        scenario.cuttOffTerm=0;
-    }
-    else
-    {
-        scenario.cuttOffTerm=1;
-    }
-
-    scenario.TPS_old=scenario.TPS;
-}
-
-uint8_t funcwarmUp(uint8_t temp)
-{
-    return (130);
-}
-
-uint8_t funccrankTerm(uint8_t temp)
-{
-    return(100);
-}
-
-/*
-Important requirements
-Practically, when the engine is in a steady state, fuel mixture deviates from the stoichiometric
-in range ±2% ~ ±3% with frequency 1 ~ 2 times per second.
-This process can be assessed very well by observing the output signal waveforms of the oxygen sensor.
-Transition time of the output voltage should not exceed 120mS from one level to another.
-*/
-
-//This control can be used only with narrow band sensor lambda
-
-void LambdaCorrectionFunc(uint8_t lambdaRequested, uint8_t lambdaMeasured)
-{
-		static enum Lambda crtlStateOld=RICH;
-
-    if(scenario.Lambda>lambdaVoltRichTheshould)
-    {
-        scenario.LambDir=RICH;
-    }
-    else if(scenario.Lambda<lambdaVoltLeanTheshould)
-    {
-        scenario.LambDir=LEAN;
-    }
-    else
-    {
-        scenario.LambDir=INACTIVE;
-    }
-
-    if((lambdaRequested!=Lambda_Stoichiometric)||(scenario.LambDir==INACTIVE))
-    {
-        //Neutral correction
-        scenario.lambdaCorrectTerm=100;
-        return;
-    }
-
-		if(scenario.LambDir!=crtlStateOld)
-		{
-				scenario.lambdaCorrectTerm=100;
-		}
-
-    //Proportional control
-    switch(scenario.LambDir)
-    {
-        case RICH:      if(scenario.lambdaCorrectTerm<=90)
-                        {
-                            if(scenario.counterNeg==0)
-                            {
-																scenario.counterNeg=10;
-                                scenario.lambdaCorrectTerm=100;
-                            }
-														else
-														{
-																scenario.counterNeg--;
-														}
-                        }
-												else
-												{
-														scenario.lambdaCorrectTerm=scenario.lambdaCorrectTerm-decrement;
-												}
-
-                        break;
-
-        case LEAN:      if(scenario.lambdaCorrectTerm>=110)
-                        {
-                            if(scenario.counterPos==0)
-                            {
-															  scenario.counterPos=10;
-                                scenario.lambdaCorrectTerm=100;
-                            }
-														else
-														{
-																scenario.counterPos--;
-														}
-                        }
-												else
-												{
-														scenario.lambdaCorrectTerm=scenario.lambdaCorrectTerm+increment;
-												}
-
-                        break;
-
-        default:    break;
-    }
-
-		crtlStateOld=scenario.LambDir;
-}
-
-uint8_t funcVoleff(uint8_t PMap,uint16_t Engine_Speed)
-{
-    return (100);
-}
-
-uint8_t funcLambda(uint8_t PMap,uint16_t Engine_Speed)
-{
-    return (100);
-}
-
-uint8_t funcCycles(uint8_t temp)
-{
-    return (100);
-}
-
-void Injector_CMD(uint16_t pwm)
-{
-    __HAL_TIM_SET_COMPARE(&htim4,TIM_CHANNEL_1,pwm);
-}
-
-uint32_t Saturation(uint32_t var,uint32_t sat)
-{
-    if(var>sat)
-    {
-        var=sat;
-    }
-
-    return(var);
-}
-
-void FuelCalc(void)
-{
-    if(scenario.Engine_State<CRANK)
-    {
-        scenario.PW_us=0;
-    }
-    else if(scenario.Engine_State==CRANK)
-    {
-        //Fuel strategy
-        if(scenario.TPS>maxPedalOnCrank)
-        {
-            scenario.PW_us=0;
-        }
-        else
-        {
-					  /*
-						scenario.PMap=101;
-						scenario.Displacement=135;
-						scenario.Tair=45;
-						scenario.VoleffCrank=100;						
-						scenario.crankTerm=100;
-						scenario.LambdaRequestedCrank=100;
-						scenario.AFRstoich=132;
-						scenario.Engine_Speed=800;
-					  */
-					
-            //After achieve Engine.State=Crank Enable to inject fixed fuel amount
-            scenario.Airmass=(10*scenario.PMap*scenario.Displacement*scenario.VoleffCrank*funccrankTerm(scenario.EngineTemp))/((R_div_Mair*(scenario.Tair+273)));
-						scenario.Airmass=(scenario.Airmass*scenario.Engine_Speed)/3000;
-						scenario.Fuelmass=(10000*scenario.Airmass)/(scenario.AFRstoich*scenario.LambdaRequestedCrank);
-						scenario.Injectormassflow=scenario.Fuelmass;
-						scenario.PW_percent=scenario.Injectormassflow/375;
-						scenario.PW_us=(scenario.PW_percent*InjectorMaxTime)/1000;
-						scenario.PW_us=Saturation(scenario.PW_us,InjectorMaxTime);
-        }
-    }
-    else if(scenario.Engine_State>CRANK)
-    {
-        if(!(scenario.counterCycles>=funcCycles(scenario.EngineTemp)))
-        {
-            scenario.warmUpTerm=funcwarmUp(scenario.EngineTemp);
-        }
-        else
-        {
-            scenario.warmUpTerm=100;
-        }
-
-        TPS_Treatment();
-
-        if(scenario.Engine_State!=OVERSPEED)
-        {
-            scenario.overspeedTerm=1;
-        }
-        else
-        {
-            scenario.overspeedTerm=0;
-            scenario.PW_us=0;
-            return;
-        }
-
-        scenario.Voleff=funcVoleff(scenario.PMap,scenario.Engine_Speed);
-        scenario.LambdaRequested=funcLambda(scenario.PMap,scenario.Engine_Speed);
-        LambdaCorrectionFunc(scenario.LambdaRequested,scenario.Lambda);
-
-				/*
-        scenario.PMap=101;
-        scenario.Displacement=135;
-        scenario.Tair=45;
-        scenario.Voleff=100;
-        scenario.warmUpTerm=100;
-        scenario.fastEnrichmentTerm=100;
-        scenario.crankTerm=100;
-        scenario.lambdaCorrectTerm=100;
-				scenario.LambdaRequested=100;
-        scenario.AFRstoich=132;
-        scenario.Engine_Speed=3000;
-        */
-				
-				scenario.Airmass=(1000*scenario.PMap*scenario.Displacement*scenario.Voleff)/((R_div_Mair*(scenario.Tair+273)));
-				scenario.Airmass=(scenario.Airmass*scenario.Engine_Speed)/3000;
-				scenario.Fuelmass=(10000*scenario.Airmass)/(scenario.AFRstoich*scenario.LambdaRequested);
-				scenario.TotalTerm=(scenario.warmUpTerm*scenario.fastEnrichmentTerm*scenario.lambdaCorrectTerm*scenario.cuttOffTerm*scenario.overspeedTerm)/1000;
-				scenario.Injectormassflow=(scenario.Fuelmass*scenario.TotalTerm)/1000;
-				scenario.PW_percent=scenario.Injectormassflow/375;
-				scenario.PW_us=(scenario.PW_percent*InjectorMaxTime)/1000;
-				scenario.PW_us=Saturation(scenario.PW_us,InjectorMaxTime);
-    }
-}
-
-//Will running periodically with period equal 50ms (20 times per second)
-//This state machine define the engine state
-void Eng_Status(void)
-{
-		switch(scenario.Engine_State)
-		{
-				case WAKEUP:    ////Pump turn on
-												if(Read_Output_Pump()==OFF)
-												{
-														Set_Ouput_Pump(ON);
-														Cond0=TRUE;
-												}
-
-												//Wait some time to fill fuel rail
-												if(Timeout_ms(Cond0,&Counter0,2000))
-												{
-														Cond0=FALSE;
-														Set_Ouput_Injector(ON);
-													  Injector_CMD(PWM_100);
-														//setTimeoutHookUp(Timer0,PrimerPulse(scenario.EngineTemp),&TurnOffInjector);
-													  setTimeoutHookUp(Timer0,PrimerPulse(90),&TurnOffInjector);
-														scenario.Engine_State=PRIMERINJ;
-												}
-
-												break;
-
-				case PRIMERINJ: if(checkTimeoutHookUp(Timer0))
-												{
-														scenario.Engine_Speed=0;
-														Set_Output_LED_Green(ON);   //Crank allowed
-														scenario.Engine_State=STOP;
-												}
-
-												break;
-
-				case STOP:      //I need to treat this statment
-												if(pulseDetected)
-												{
-														Cond2=TRUE;   //Enable timer, timer limit to launch engine
-														scenario.Engine_State=CRANK;
-												}
-
-												break;
-
-				case CRANK:     if(scenario.Engine_Speed>idle_min)
-												{
-														//Enable the counter
-														Cond3=TRUE;
-
-														//Check if timer is elapsed
-														if(Timeout_ms(Cond3,&Counter3,3000))
-														{
-																Cond3=FALSE;
-															  Counter3=0;
-																Set_Output_LED_Green(OFF);
-																scenario.Engine_State=IDLE;
-														}
-												}
-												else if((scenario.Acceleration==DECEL)||(Timeout_ms(Cond2,&Counter2,2000)))
-												{
-														Cond2=FALSE;
-													  Counter2=0;
-														Cond4=TRUE;
-														scenario.Engine_State=STALL;
-												}
-
-												break;
-
-				case STALL:  		if((scenario.Engine_Speed<rpm_stopped)||(Timeout_ms(Cond4,&Counter4,1500)))
-												{
-														Cond4=FALSE;
-													  Counter4=0;
-														scenario.EngineDiedCounter++;
-														scenario.Engine_Speed=0;
-														Set_Output_LED_Green(ON);   //Crank allowed
-														scenario.Engine_State=STOP;
-												}
-
-												break;
-
-				case IDLE:      if(scenario.Engine_Speed>idle_max)
-												{
-														scenario.Engine_State=CRUISE;
-												}
-												else if(scenario.Engine_Speed<=idle_min)
-												{
-														scenario.Engine_State=STALL;
-													  Cond4=TRUE;
-												}
-
-												break;
-
-				case CRUISE:    if(scenario.Engine_Speed>rpm_max)
-												{
-														scenario.Engine_State=OVERSPEED;
-												}
-												else if(scenario.Engine_Speed<=idle_max)
-												{
-														scenario.Engine_State=IDLE;
-												}
-
-												break;
-
-				case OVERSPEED: if(scenario.Engine_Speed<=(rpm_max-hyst))
-												{
-														scenario.Engine_State=CRUISE;
-												}
-
-												break;
-
-				default:        break;
-		}
+    HAL_GPIO_TogglePin(GPIOA,GPIO_PIN_6);
 }
 
 void Set_Pulse_Program(void)
@@ -1246,6 +634,638 @@ void Set_Pulse_Program(void)
     }
 
     Set_Ouput_InterruptionTest();
+}
+
+void Read_Analog_Sensors(void)
+{
+    scenario.TPSRaw=adcArray[0];
+    scenario.TairRaw=adcArray[1];
+    scenario.PMapRaw=adcArray[2];
+    scenario.EngineTempRaw=adcArray[3];
+    scenario.VBatRaw=adcArray[4];
+    scenario.VLambdaRaw=adcArray[5];
+    scenario.TempBoardRaw=adcArray[6];
+}
+
+//Throttle position sensor treatment
+uint8_t funcfastEnrichment(uint8_t TPS)
+{
+    return(120);
+}
+
+uint8_t funcfastEnleanment(int8_t TPS)
+{
+    return(80);
+}
+
+/* Gas treatment */
+//create a automatic learning to get tps_min and tps_max
+void TPS_Treatment(void)
+{
+    scenario.deltaTPS=scenario.TPS-scenario.TPS_old;
+
+    if(scenario.deltaTPS>quickCmdPos)
+    {
+        //Enrichment fuel based in a table deltaTPS(temp)
+        Set_Output_LED_Blue(ON);
+        scenario.fastEnrichmentTerm=funcfastEnrichment(scenario.deltaTPS);   //1,2
+        Cond5=TRUE;
+    }
+    else if(scenario.deltaTPS<quickCmdNeg)
+    {
+        //En-leanment fuel based in a table deltaTPS(temp)
+		Set_Output_LED_Red(ON);
+        scenario.fastEnrichmentTerm=funcfastEnleanment(scenario.deltaTPS);   //0,8
+        Cond6=TRUE;
+    }
+
+    if(Timeout_ms(Cond5,&Counter5,tfastenrich))
+    {
+        Cond5=FALSE;
+        Set_Output_LED_Blue(OFF);
+        scenario.fastEnrichmentTerm=100;
+    }
+    else if(Timeout_ms(Cond6,&Counter6,tfastenleanment))
+    {
+        Cond6=FALSE;
+			  Set_Output_LED_Red(OFF);
+        scenario.fastEnrichmentTerm=100;
+    }
+
+    //Pay attention, this function can overwrite enrichment function...
+    //if((scenario.TPS<tps_min_cutoff)&&(scenario.Engine_Speed>threshould))
+		if(Timeout_ms((scenario.TPS<tps_min_cutoff),&Counter7,TimeToGetInCutoff)
+		&&(scenario.Engine_Speed>threshould))
+    {
+		scenario.cuttOffTerm=0;
+    }
+    else
+    {
+        scenario.cuttOffTerm=1;
+    }
+
+    scenario.TPS_old=scenario.TPS;
+}
+
+uint8_t funcwarmUp(uint8_t temp)
+{
+    return (130);
+}
+
+uint8_t funccrankTerm(uint8_t temp)
+{
+    return(100);
+}
+
+/*
+Important requirements
+Practically, when the engine is in a steady state, fuel mixture deviates from the stoichiometric
+in range ±2% ~ ±3% with frequency 1 ~ 2 times per second.
+This process can be assessed very well by observing the output signal waveforms of the oxygen sensor.
+Transition time of the output voltage should not exceed 120mS from one level to another.
+*/
+
+//This control can be used only with narrow band sensor lambda
+
+void LambdaCorrectionFunc(uint8_t lambdaRequested, uint8_t lambdaMeasured)
+{
+	static enum Lambda crtlStateOld=RICH;
+
+	//Cond5 -> Enrichment // Cond6 -> Enleanment
+	if((!scenario.EnabLambdaCtrl)||((Cond5)||(Cond6)))
+	{
+		return;
+	}
+
+    if(scenario.Lambda>lambdaVoltRichTheshould)
+    {
+        scenario.LambDir=RICH;
+    }
+    else if(scenario.Lambda<lambdaVoltLeanTheshould)
+    {
+        scenario.LambDir=LEAN;
+    }
+    else
+    {
+        scenario.LambDir=INACTIVE;
+    }
+
+    if((lambdaRequested!=Lambda_Stoichiometric)||(scenario.LambDir==INACTIVE))
+    {
+        //Neutral correction
+        scenario.lambdaCorrectTerm=100;
+        return;
+    }
+
+		if(scenario.LambDir!=crtlStateOld)
+		{
+			scenario.lambdaCorrectTerm=100;
+		}
+
+    //Proportional control
+    switch(scenario.LambDir)
+    {
+        case RICH:      if(scenario.lambdaCorrectTerm<=90)
+                        {
+                            if(scenario.counterNeg==0)
+                            {
+								scenario.counterNeg=10;
+                                scenario.lambdaCorrectTerm=100;
+                            }
+							else
+							{
+								scenario.counterNeg--;
+							}
+                        }
+						else
+						{
+							scenario.lambdaCorrectTerm=scenario.lambdaCorrectTerm-decrement;
+						}
+
+                        break;
+
+        case LEAN:      if(scenario.lambdaCorrectTerm>=110)
+                        {
+                            if(scenario.counterPos==0)
+                            {
+								scenario.counterPos=10;
+                                scenario.lambdaCorrectTerm=100;
+                            }
+							else
+							{
+								scenario.counterPos--;
+							}
+                        }
+						else
+						{
+							scenario.lambdaCorrectTerm=scenario.lambdaCorrectTerm+increment;
+						}
+
+                        break;
+
+        default:    	break;
+    }
+
+	crtlStateOld=scenario.LambDir;
+}
+
+uint8_t funcVoleff(uint8_t PMap,uint16_t Engine_Speed)
+{
+    return (100);
+}
+
+uint8_t funcLambda(uint8_t PMap,uint16_t Engine_Speed)
+{
+    return (100);
+}
+
+uint8_t funcCycles(uint8_t temp)
+{
+    return (100);
+}
+
+void Board_Temp(void)
+{
+    //Needs to apply a filter due the sensor characteristics
+    scenario.TempBoardFilt=digitalFilter8bits(scenario.TempBoardRaw,180);
+    scenario.TempBoard=((V25-scenario.TempBoardFilt)/Avg_Slope)+25;
+}
+
+void VBatLinearization(void)
+{
+    //Needs to apply a filter besause the real circuit doesn´t have one...
+    scenario.VBatFilt=digitalFilter8bits(scenario.VBatRaw,180);
+    scenario.VBat=(scenario.VBatFilt*150)/255;
+}
+
+void TPSLinearization(void)
+{
+	scenario.TPS=(100*(scenario.TPSRaw-tps_min))/(tps_max-tps_min);
+    //scenario.TPS=30;
+}
+
+void MAPLinearization(void)
+{
+    scenario.PMap=(scenario.PMapRaw*110)/255;
+	scenario.PMap=101;
+}
+
+void LambdaLinearization(void)
+{
+    scenario.Lambda=(scenario.VLambdaRaw*100)/85;
+}
+
+void EngineTempLinearization(void)
+{
+    scenario.EngineTemp=(scenario.EngineTempRaw*180)/255;
+}
+
+void TairLinearization(void)
+{
+    scenario.Tair=(scenario.TairRaw*150)/255;
+	scenario.Tair=45;
+}
+
+void InjectorDeadTimeCalc(void)
+{
+	scenario.InjectorDeadTime=InjectorDeadTimeArray[0];
+}
+
+void Engine_STOP_test(void)
+{
+    static uint8_t program;
+    static uint32_t initial_value;
+
+    if(program == FALSE)
+    {
+        initial_value = scenario.Rising_Edge_Counter;
+        program = TRUE;
+    }
+    else
+    {
+        if(scenario.Rising_Edge_Counter == initial_value)
+        {
+            scenario.Rising_Edge_Counter = 0u;
+            scenario.Engine_Speed = 0u;
+            program = FALSE;
+        }
+    }
+}
+
+void Periodic_task(uint32_t period, void (*func)(void), sched_var var[], uint8_t pos)
+{
+    volatile uint32_t counter;
+
+    counter = HAL_GetTick();
+
+    if(var[pos].program == FALSE)
+    {
+		var[pos].target_time = counter+period;
+        var[pos].program = TRUE;
+    }
+
+    if(counter>=var[pos].target_time)
+    {
+        var[pos].program = FALSE;
+        (*func)();
+    }
+}
+
+void Crank_Pos_IACV(void)
+{
+    __HAL_TIM_SET_COMPARE(&htim4,TIM_CHANNEL_1,pid_control.Pwm_OUT);
+}
+
+void Open_IACV(void)
+{
+	__HAL_TIM_SET_COMPARE(&htim4,TIM_CHANNEL_1,2069);
+}
+
+void Close_IACV(void)
+{
+	__HAL_TIM_SET_COMPARE(&htim4,TIM_CHANNEL_1,69);
+}
+
+uint16_t funcIdleSetpoint(uint8_t temp)
+{
+	//Here I need to create an array Engine Speed Target in function of Engine Temperature
+	pid_control.Engine_Speed_Setpoint=1300;
+	return(pid_control.Engine_Speed_Setpoint);
+}
+
+void pid_Init(void)
+{
+	pid_control.CumError=0;
+	pid_control.Pwm_PI=0;
+	pid_control.Pwm_OUT=0;
+	pid_control.error_visual=0;
+}
+
+void IACV_Control(void)
+{
+	int32_t Error=0;
+
+	Error=funcIdleSetpoint(scenario.EngineTemp)-scenario.Engine_Speed;
+	pid_control.error_visual=Error;
+
+	if((pid_control.Pwm_PI>=0)&&(pid_control.Pwm_PI<=2800u))
+	{
+		pid_control.CumError+=Error;
+	}
+
+	pid_control.Pwm_PI=(((pid_control.kpnum*pid_control.kidenum*Error)+(pid_control.kinum*pid_control.kpdenum*pid_control.CumError))/(pid_control.kpdenum*pid_control.kidenum));
+
+	if((pid_control.Pwm_PI>=0)&&(pid_control.Pwm_PI<=2800u))
+	{
+		pid_control.Pwm_OUT=pid_control.Pwm_PI;
+	}
+	else
+	{
+		pid_control.Pwm_OUT=0u;
+	}
+
+	__HAL_TIM_SET_COMPARE(&htim4,TIM_CHANNEL_1,pid_control.Pwm_OUT);
+}
+
+void Learn_test_IACV(void)
+{
+	__HAL_TIM_SET_COMPARE(&htim4,TIM_CHANNEL_1,0);
+}
+
+void Idle_Management(void)
+{
+	static uint8_t enable_pid=OFF;
+
+	if(scenario.TPS<min_tps_IDLE)
+	{
+		switch(scenario.Engine_State)
+		{
+			case WAKEUP:
+			case PRIMERINJ: Learn_test_IACV();
+
+			case STOP:
+			case CRANK:
+			case STALL:		Crank_Pos_IACV();
+							enable_pid=1;
+						    break;
+
+			case IDLE:  	if(enable_pid)
+							{
+								enable_pid=OFF;
+								pid_Init();
+							}
+
+							IACV_Control();
+							break;
+
+			case CRUISE:
+            case OVERSPEED: Open_IACV();
+							enable_pid=1;
+							break;
+
+			default:        break;
+		}
+	}
+}
+
+//Detect engine acceleration and classify as: Pos, Neg or stable
+void AccelDer(void)
+{
+    scenario.deltaEngineSpeed=scenario.Engine_Speed-scenario.Engine_Speed_old;
+
+    if(scenario.deltaEngineSpeed>accel_rate)
+    {
+        scenario.Acceleration=ACCEL;
+    }
+    else if(scenario.deltaEngineSpeed<decel_rate)
+    {
+        scenario.Acceleration=DECEL;
+    }
+    else
+    {
+        scenario.Acceleration=STABLE;
+    }
+
+    scenario.Engine_Speed_old=scenario.Engine_Speed;
+}
+
+//Will running periodically with period equal 50ms (20 times per second)
+//This state machine define the engine state
+void Eng_Status(void)
+{
+	switch(scenario.Engine_State)
+	{
+		case WAKEUP:    ////Pump turn on
+						if(Read_Output_Pump()==OFF)
+						{
+							Set_Ouput_Pump(ON);
+							Cond0=TRUE;
+						}
+
+						//Wait some time to fill fuel rail
+						if(Timeout_ms(Cond0,&Counter0,2000))
+						{
+							Cond0=FALSE;
+							Set_Ouput_Injector(ON);
+							Injector_CMD(PWM_100);
+							//setTimeoutHookUp(Timer0,PrimerPulse(scenario.EngineTemp),&TurnOffInjector);
+							setTimeoutHookUp(Timer0,PrimerPulse(90),&TurnOffInjector);
+							scenario.Engine_State=PRIMERINJ;
+						}
+
+						break;
+
+		case PRIMERINJ: if(checkTimeoutHookUp(Timer0))
+						{
+							scenario.Engine_Speed=0;
+							Set_Output_LED_Green(ON);   //Crank allowed
+							scenario.Engine_State=STOP;
+						}
+
+						break;
+
+		case STOP:      //I need to treat this statment
+						if(scenario.pulseDetected)
+						{
+							Cond2=TRUE;   //Enable timer, timer limit to launch engine
+							scenario.Engine_State=CRANK;
+						}
+
+						break;
+
+		case CRANK:     if(scenario.Engine_Speed>idle_min)
+						{
+							//Enable the counter
+							Cond3=TRUE;
+							//Check if timer is elapsed
+							if(Timeout_ms(Cond3,&Counter3,3000))
+							{
+								Cond3=FALSE;
+								Counter3=0;
+								Set_Output_LED_Green(OFF);
+								scenario.Engine_State=IDLE;
+							}
+						}
+						else if((scenario.Acceleration==DECEL)||(Timeout_ms(Cond2,&Counter2,2000)))
+						{
+							Cond2=FALSE;
+							Counter2=0;
+							Cond4=TRUE;
+							scenario.Engine_State=STALL;
+						}
+
+						break;
+
+		case STALL:		if((scenario.Engine_Speed<rpm_stopped)||(Timeout_ms(Cond4,&Counter4,1500)))
+						{
+							Cond4=FALSE;
+							Counter4=0;
+							scenario.EngineDiedCounter++;
+							scenario.Engine_Speed=0;
+							Set_Output_LED_Green(ON);   //Crank allowed
+							scenario.Engine_State=STOP;
+						}
+
+						break;
+
+		case IDLE:      if(scenario.Engine_Speed>idle_max)
+						{
+							scenario.Engine_State=CRUISE;
+						}
+						else if(scenario.Engine_Speed<=idle_min)
+						{
+							scenario.Engine_State=STALL;
+							Cond4=TRUE;
+						}
+
+						break;
+
+		case CRUISE:    if(scenario.Engine_Speed>rpm_max)
+						{
+							scenario.Engine_State=OVERSPEED;
+						}
+						else if(scenario.Engine_Speed<=idle_max)
+						{
+							scenario.Engine_State=IDLE;
+						}
+
+						break;
+
+		case OVERSPEED: if(scenario.Engine_Speed<=(rpm_max-hyst))
+						{
+							scenario.Engine_State=CRUISE;
+						}
+
+						break;
+
+		default:        break;
+	}
+}
+
+void FuelCalc(void)
+{
+    if(scenario.Engine_State<CRANK)
+    {
+		//Here I have the primer pulse acting...
+        //scenario.PW_us=0;
+    }
+    else if(scenario.Engine_State==CRANK)
+    {
+        //Fuel strategy
+        if(scenario.TPS>maxPedalOnCrank)
+        {
+            scenario.PW_us=0;
+						Injector_CMD(scenario.PW_us);
+        }
+        else
+        {
+			/*
+			scenario.PMap=101;
+			scenario.Displacement=135;
+			scenario.Tair=45;
+			scenario.VoleffCrank=100;
+			scenario.crankTerm=100;
+			scenario.LambdaRequestedCrank=100;
+			scenario.AFRstoich=132;
+			scenario.Engine_Speed=800;
+			*/
+
+            //After achieve Engine.State=Crank Enable to inject fixed fuel amount
+            scenario.Airmass=(10*scenario.PMap*scenario.Displacement*scenario.VoleffCrank*funccrankTerm(scenario.EngineTemp))/((R_div_Mair*(scenario.Tair+273)));
+			scenario.Airmass=(scenario.Airmass*scenario.Engine_Speed)/3000;
+			scenario.Fuelmass=(10000*scenario.Airmass)/(scenario.AFRstoich*scenario.LambdaRequestedCrank);
+			scenario.Injectormassflow=scenario.Fuelmass;
+			scenario.PW_percent=scenario.Injectormassflow/375;
+			scenario.PW_us=(scenario.PW_percent*InjectorMaxTime)/1000;
+			scenario.PW_us=Saturation(scenario.PW_us,InjectorMaxTime);
+			Injector_CMD(scenario.PW_us);
+        }
+    }
+    else if(scenario.Engine_State>CRANK)
+    {
+        if(!(scenario.counterCycles>=funcCycles(scenario.EngineTemp)))
+        {
+            scenario.warmUpTerm=funcwarmUp(scenario.EngineTemp);
+        }
+        else
+        {
+            scenario.warmUpTerm=100;
+        }
+
+        TPS_Treatment();
+
+        if(scenario.Engine_State!=OVERSPEED)
+        {
+            scenario.overspeedTerm=1;
+        }
+        else
+        {
+            scenario.overspeedTerm=0;
+            scenario.PW_us=0;
+			Injector_CMD(scenario.PW_us);
+            return;
+        }
+
+        scenario.Voleff=funcVoleff(scenario.PMap,scenario.Engine_Speed);
+        scenario.LambdaRequested=funcLambda(scenario.PMap,scenario.Engine_Speed);
+        LambdaCorrectionFunc(scenario.LambdaRequested,scenario.Lambda);
+
+		/*
+        scenario.PMap=101;
+        scenario.Displacement=135;
+        scenario.Tair=45;
+        scenario.Voleff=100;
+        scenario.warmUpTerm=100;
+        scenario.fastEnrichmentTerm=100;
+        scenario.crankTerm=100;
+        scenario.lambdaCorrectTerm=100;
+		scenario.LambdaRequested=100;
+        scenario.AFRstoich=132;
+        scenario.Engine_Speed=3000;
+        */
+
+		scenario.Airmass=(1000*scenario.PMap*scenario.Displacement*scenario.Voleff)/((R_div_Mair*(scenario.Tair+273)));
+		scenario.Airmass=(scenario.Airmass*scenario.Engine_Speed)/3000;
+		scenario.Fuelmass=(10000*scenario.Airmass)/(scenario.AFRstoich*scenario.LambdaRequested);
+		scenario.TotalTerm=(scenario.warmUpTerm*scenario.fastEnrichmentTerm*scenario.lambdaCorrectTerm*scenario.cuttOffTerm*scenario.overspeedTerm)/1000;
+		scenario.Injectormassflow=(scenario.Fuelmass*scenario.TotalTerm)/1000;
+		scenario.PW_percent=scenario.Injectormassflow/375;
+		scenario.PW_us=(scenario.PW_percent*InjectorMaxTime)/1000;
+		scenario.PW_us=Saturation(scenario.PW_us,InjectorMaxTime);
+		Injector_CMD(scenario.PW_us);
+    }
+}
+
+void Task_Fast(void)
+{
+    //HAL_IWDG_Init(&hiwdg);
+    //Read analog sensors
+    Read_Analog_Sensors();
+
+    //Treat analog sensors
+    TPSLinearization();
+    MAPLinearization();
+    LambdaLinearization();
+    EngineTempLinearization();
+    TairLinearization();
+
+    //Fuel calculation
+    AccelDer();
+    InjectorDeadTimeCalc();
+	  //PulseDetection();
+    Eng_Status();
+    FuelCalc();
+}
+
+void Task_Medium(void)
+{
+    Idle_Management();
+}
+
+void Task_Slow(void)
+{
+    Board_Temp();
+    VBatLinearization();
 }
 
 /* USER CODE END PFP */
@@ -1307,9 +1327,9 @@ int main(void)
         }
 
         //Scheduler
-        Periodic_task(  20,&Task_Fast,   array_sched_var, 0);
-        Periodic_task( 100,&Task_Medium, array_sched_var, 1);
-        Periodic_task(1000,&Task_Slow,   array_sched_var, 2);
+        Periodic_task(  20,&Task_Fast,   array_sched_var, 0);  //20ms
+        Periodic_task( 100,&Task_Medium, array_sched_var, 1);  //100ms
+        Periodic_task(1000,&Task_Slow,   array_sched_var, 2);  //1s
 
         //Timer Management
         TimerListManagement(timerList);
