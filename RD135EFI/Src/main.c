@@ -92,7 +92,7 @@ DMA_HandleTypeDef hdma_usart3_rx;
 #define R_div_Mair                    29
 #define TimeToGetInCutoff           1000
 
-uint8_t Cond0=0,Cond1=0,Cond2=0,Cond3=0,Cond4=0,Cond5=0,Cond6=0;
+uint8_t Cond0=0,Cond1=0,Cond2=0,Cond3=0,Cond4=0,Cond5=0,Cond6=0,Cond8=0;
 uint32_t Counter0=0,Counter1=0,Counter2=0,Counter3=0,Counter4=0,Counter5=0,Counter6=0,Counter7=0,Counter8=0,Counter9=0,Counter10=0;
 
 //Scheduller
@@ -114,7 +114,7 @@ typedef struct TimerStruct
 {
     uint32_t target_time;
     uint8_t  output;
-    void (*func_pointer)();
+		void (*func_pointer)();
 }timerSchedtype;
 
 timerSchedtype timerList[nTimer]; //={{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0}};
@@ -123,83 +123,83 @@ typedef struct system_info
 {
 
 		uint8_t  EnabLambdaCtrl;               //1
-        enum EngineState Engine_State;         //WAKEUP
-        enum Accel Acceleration;               //STABLE
-        uint16_t Engine_Speed_old;             //0
-        uint16_t Engine_Speed;                 //0
-	    uint8_t  pulseDetected;                //0
-        int16_t  deltaEngineSpeed;             //0
-        uint16_t engineSpeedPred;              //0
-        uint16_t engineSpeedFiltered;          //0
-        uint16_t avarageEngineSpeed;           //0
-        uint32_t Measured_Period;              //0
+    enum EngineState Engine_State;         //WAKEUP
+    enum Accel Acceleration;               //STABLE
+    uint16_t Engine_Speed_old;             //0
+    uint16_t Engine_Speed;                 //0
+	  uint8_t  pulseDetected;                //0
+    int16_t  deltaEngineSpeed;             //0
+    uint16_t engineSpeedPred;              //0
+    uint16_t engineSpeedFiltered;          //0
+    uint16_t avarageEngineSpeed;           //0
+    uint32_t Measured_Period;              //0
 
-        uint32_t TDuty_Input_Signal;           //0
-        uint32_t tdutyInputSignalPred;         //0
-        uint32_t tdutyInputSignalPredLinear;   //0
+    uint32_t TDuty_Input_Signal;           //0
+    uint32_t tdutyInputSignalPred;         //0
+    uint32_t tdutyInputSignalPredLinear;   //0
 
-        int8_t   deltaTPS;                     //0
-        uint8_t  TPS_old;                      //0
-        enum Lambda LambDir;                   //RICH
-        uint8_t  Update_calc;                  //TRUE
-        uint8_t  LambdaRequested;              //100
-	    uint8_t  LambdaRequestedCrank;         //100
+    int8_t   deltaTPS;                     //0
+    uint8_t  TPS_old;                      //0
+    enum Lambda LambDir;                   //RICH
+    uint8_t  Update_calc;                  //TRUE
+    uint8_t  LambdaRequested;              //100
+	  uint8_t  LambdaRequestedCrank;         //100
 
-	    uint32_t Airmass;                      //0
-        uint8_t  Voleff;                       //100
+	  uint32_t Airmass;                      //0
+    uint8_t  Voleff;                       //100
 		uint8_t  VoleffCrank;                  //40
-        uint8_t  Displacement;                 //135
-        uint8_t  AFRstoich;                    //132
+    uint8_t  Displacement;                 //135
+    uint8_t  AFRstoich;                    //132
 		uint16_t InjectorDeadTime;             //50  (1ms)
-        uint32_t Injectormassflow;             //0
-        uint32_t PW_us;                        //0
+    uint32_t Injectormassflow;             //0
+    uint32_t PW_us;                        //0
 		uint32_t PW_percent;                   //0
-        uint32_t Fuelmass;                     //0
+    uint32_t Fuelmass;                     //0
 
-        uint32_t nOverflow;                    //0
-        uint8_t  EngineDiedCounter;            //0
-        uint32_t counterCycles;                //0
-        uint8_t  counterPos;                   //10
-        uint8_t  counterNeg;                   //10
-        uint32_t nOverflow_RE;                 //0
-        uint32_t nOverflow_FE;                 //0
-        uint32_t Rising_Edge_Counter;          //0
+    uint32_t nOverflow;                    //0
+    uint8_t  EngineDiedCounter;            //0
+    uint32_t counterCycles;                //0
+    uint8_t  counterPos;                   //10
+    uint8_t  counterNeg;                   //10
+    uint32_t nOverflow_RE;                 //0
+    uint32_t nOverflow_FE;                 //0
+    uint32_t Rising_Edge_Counter;          //0
 
-        uint8_t  cuttOffTerm;                  //1
-        uint8_t  fastEnrichmentTerm;           //100
-        uint8_t  warmUpTerm;                   //100
-        uint8_t  overspeedTerm;                //100
-        uint8_t  crankTerm;                    //100
-        uint8_t  lambdaCorrectTerm;            //100
+    uint8_t  cuttOffTerm;                  //1
+    uint8_t  fastEnrichmentTerm;           //100
+    uint8_t  warmUpTerm;                   //100
+    uint8_t  overspeedTerm;                //100
+    uint8_t  crankTerm;                    //100
+    uint8_t  lambdaCorrectTerm;            //100
 		uint16_t TotalTerm;                    //100
 
-        uint8_t  VBatRaw;                      //0
-        uint8_t  VBatFilt;                     //0
-        uint8_t  VBat;                         //0
+    uint8_t  VBatRaw;                      //0
+    uint8_t  VBatFilt;                     //0
+    uint8_t  VBat;                         //0
 
-        uint8_t  VLambdaRaw;                   //0
-        uint8_t  VLambdaFilt;                  //0
-        uint8_t  Lambda;                       //0
+    uint8_t  VLambdaRaw;                   //0
+    uint8_t  VLambdaFilt;                  //0
+    uint8_t  Lambda;                       //0
 
-        uint8_t  TempBoardRaw;                 //0
-        uint8_t  TempBoardFilt;                //0
-        uint8_t  TempBoard;                    //0
+    uint8_t  TempBoardRaw;                 //0
+    uint8_t  TempBoardFilt;                //0
+    uint8_t  TempBoard;                    //0
 
-        uint8_t  TPSRaw;                       //0
-        uint8_t  TPSFilt;                      //0
-        uint8_t  TPS;                          //0
+		uint8_t  TPSRaw;                       //0
+    uint8_t  TPSFilt;                      //0
+    uint8_t  TPS;                          //0
 
-        uint8_t  PMapRaw;                      //0
-        uint8_t  PMapFilt;                     //0
-        uint8_t  PMap;                         //0
+    uint8_t  PMapRaw;                      //0
+    uint8_t  PMapFilt;                     //0
+    uint8_t  PMap;                         //0
 
-        uint8_t  TairRaw;                      //0
-        uint8_t  TairFilt;                     //0
-        uint8_t  Tair;                         //0
+    uint8_t  TairRaw;                      //0
+    uint8_t  TairFilt;                     //0
+    uint8_t  Tair;                         //0
 
-        uint8_t  EngineTempRaw;                //0
-        uint8_t  EngineTempFilt;               //0
-        uint8_t  EngineTemp;                   //0
+    uint8_t  EngineTempRaw;                //0
+    uint8_t  EngineTempFilt;               //0
+    uint8_t  EngineTemp;                   //0
 }system_vars;
 
 volatile system_vars scenario={1,WAKEUP,STABLE,0,0,0,0,0,0,0,0,0,0,0,0,0,RICH,TRUE,100,100,0,100,40,135,132,50,0,0,0,0,0,0,0,10,10,0,0,0,1,100,100,100,100,100,100,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
@@ -207,16 +207,16 @@ volatile system_vars scenario={1,WAKEUP,STABLE,0,0,0,0,0,0,0,0,0,0,0,0,0,RICH,TR
 //PID control
 typedef struct pid_control
 {
-        uint16_t Engine_Speed_Setpoint;
-        uint8_t  error;
-        int32_t  CumError;
-        uint16_t kpnum;
-        uint16_t kpdenum;
-        uint16_t kinum;
-        uint16_t kidenum;
-        int32_t  Pwm_PI;
-        uint16_t Pwm_OUT;
-        int32_t  error_visual;
+    uint16_t Engine_Speed_Setpoint;
+    uint8_t  error;
+    int32_t  CumError;
+    uint16_t kpnum;
+    uint16_t kpdenum;
+    uint16_t kinum;
+    uint16_t kidenum;
+    int32_t  Pwm_PI;
+    uint16_t Pwm_OUT;
+		int32_t  error_visual;
 }pid_vars;
 
 volatile pid_vars pid_control={1300,0,0,600,1000,20,1000,0,0,0};
@@ -262,19 +262,19 @@ void Injector_CMD(uint16_t pwm);
 //Led Green (Bluepill)
 void Toggle_LED_Green(void)
 {
-	HAL_GPIO_TogglePin(GPIOC,GPIO_PIN_13);
+		HAL_GPIO_TogglePin(GPIOC,GPIO_PIN_13);
 }
 
 void Set_Output_LED_Green(uint8_t	Value)
 {
-	if(Value==ON)
-	{
-		HAL_GPIO_WritePin(GPIOC,GPIO_PIN_13,GPIO_PIN_RESET);
-	}
-	else
-	{
-		HAL_GPIO_WritePin(GPIOC,GPIO_PIN_13,GPIO_PIN_SET);
-	}
+		if(Value==ON)
+		{
+				HAL_GPIO_WritePin(GPIOC,GPIO_PIN_13,GPIO_PIN_RESET);
+		}
+		else
+		{
+				HAL_GPIO_WritePin(GPIOC,GPIO_PIN_13,GPIO_PIN_SET);
+		}
 }
 
 //Led Red
@@ -285,14 +285,14 @@ void Toggle_LED_Red(void)
 
 void Set_Output_LED_Red(uint8_t	Value)
 {
-	if(Value==ON)
-	{
-		HAL_GPIO_WritePin(GPIOB,GPIO_PIN_12,GPIO_PIN_RESET);
-	}
-	else
-	{
-		HAL_GPIO_WritePin(GPIOB,GPIO_PIN_12,GPIO_PIN_SET);
-	}
+		if(Value==ON)
+		{
+				HAL_GPIO_WritePin(GPIOB,GPIO_PIN_12,GPIO_PIN_RESET);
+		}
+		else
+		{
+				HAL_GPIO_WritePin(GPIOB,GPIO_PIN_12,GPIO_PIN_SET);
+		}
 }
 
 //Led Blue
@@ -303,14 +303,14 @@ void Toggle_LED_Blue(void)
 
 void Set_Output_LED_Blue(uint8_t Value)
 {
-	if(Value==ON)
-	{
-		HAL_GPIO_WritePin(GPIOB,GPIO_PIN_13,GPIO_PIN_RESET);
-	}
-	else
-	{
-		HAL_GPIO_WritePin(GPIOB,GPIO_PIN_13,GPIO_PIN_SET);
-	}
+		if(Value==ON)
+		{
+				HAL_GPIO_WritePin(GPIOB,GPIO_PIN_13,GPIO_PIN_RESET);
+		}
+		else
+		{
+				HAL_GPIO_WritePin(GPIOB,GPIO_PIN_13,GPIO_PIN_SET);
+		}
 }
 
 //Led Yellow
@@ -321,14 +321,14 @@ void Toggle_LED_Yellow(void)
 
 void Set_Output_LED_Yellow(uint8_t Value)
 {
-	if(Value==ON)
-	{
-		HAL_GPIO_WritePin(GPIOB,GPIO_PIN_14,GPIO_PIN_RESET);
-	}
-	else
-	{
-		HAL_GPIO_WritePin(GPIOB,GPIO_PIN_14,GPIO_PIN_SET);
-	}
+		if(Value==ON)
+		{
+				HAL_GPIO_WritePin(GPIOB,GPIO_PIN_14,GPIO_PIN_RESET);
+		}
+		else
+		{
+				HAL_GPIO_WritePin(GPIOB,GPIO_PIN_14,GPIO_PIN_SET);
+		}
 }
 
 //Pump
@@ -337,12 +337,12 @@ void Set_Ouput_Pump(uint8_t Value)
     if (Value==ON)
     {
         //HAL_GPIO_WritePin(GPIOB,GPIO_PIN_6,GPIO_PIN_SET);
-		HAL_GPIO_WritePin(GPIOB,GPIO_PIN_14,GPIO_PIN_RESET);
+				HAL_GPIO_WritePin(GPIOB,GPIO_PIN_14,GPIO_PIN_RESET);
     }
     else
     {
         //HAL_GPIO_WritePin(GPIOB,GPIO_PIN_6,GPIO_PIN_RESET);
-		HAL_GPIO_WritePin(GPIOB,GPIO_PIN_14,GPIO_PIN_SET);
+				HAL_GPIO_WritePin(GPIOB,GPIO_PIN_14,GPIO_PIN_SET);
     }
 }
 
@@ -362,8 +362,8 @@ void Set_Ouput_Injector(uint8_t Value)
 {
     if (Value == ON)
     {
-		//HAL_GPIO_WritePin(GPIOA,GPIO_PIN_2,GPIO_PIN_SET);
-		HAL_GPIO_WritePin(GPIOB,GPIO_PIN_13,GPIO_PIN_RESET);
+				//HAL_GPIO_WritePin(GPIOA,GPIO_PIN_2,GPIO_PIN_SET);
+				HAL_GPIO_WritePin(GPIOB,GPIO_PIN_13,GPIO_PIN_RESET);
     }
     else
     {
@@ -380,7 +380,7 @@ void Injector_CMD(uint16_t pwm)
 void TurnOffInjector(void)
 {
     Set_Ouput_Injector(OFF);
-	Injector_CMD(PWM_0);
+		Injector_CMD(PWM_0);
 }
 
 void Hardware_Init(void)
@@ -405,10 +405,10 @@ uint8_t binarySearch(volatile uint16_t array[], uint8_t first, uint8_t last, uin
 
     while (first <= last)
     {
-        if((search >= array[middle])&&
-           (search <= array[middle+1]))
+				if((search >= array[middle])&&
+          (search <= array[middle+1]))
         {
-            return middle;
+						return middle;
         }
         else if(search > array[middle+1])
         {
@@ -523,7 +523,7 @@ void TimerListManagement(timerSchedtype timerList[])
         {
             if(HAL_GetTick()>=timerList[line].target_time)
             {
-				timerList[line].target_time=0;
+								timerList[line].target_time=0;
                 timerList[line].output=TRUE;
                 timerList[line].func_pointer();
             }
@@ -549,7 +549,7 @@ uint8_t Timeout_ms(uint8_t Condition,uint32_t *timer,uint32_t period)
     }
     else
     {
-        *timer=0;
+				*timer=0;
     }
 
     return (TimeoutResp);
@@ -557,15 +557,23 @@ uint8_t Timeout_ms(uint8_t Condition,uint32_t *timer,uint32_t period)
 
 void PulseDetection(void)
 {	
-	  static uint32_t CounterPulseNow, CounterPulseOld;
+	  static uint32_t CounterPulseNow,CounterPulseOld;
 	
+		Cond8=TRUE;
+	
+	  CounterPulseNow=scenario.Rising_Edge_Counter;
+	  
 		if((CounterPulseNow-CounterPulseOld)>=1)
 		{	
-			scenario.pulseDetected=1;
+				scenario.pulseDetected=1;
 		}	
 		else
 		{	
-			scenario.pulseDetected=0;
+			  if(Timeout_ms(Cond8,&Counter8,600))
+				{
+						Cond8=FALSE;
+						scenario.pulseDetected=0;
+				}	
 		}		
 		
 		CounterPulseOld=CounterPulseNow;
@@ -592,7 +600,7 @@ void Set_Ouput_InterruptionTest(void)
     HAL_GPIO_TogglePin(GPIOA,GPIO_PIN_6);
 }
 
-void Set_Pulse_Program(void)
+void EngineSpeedCalculation(void)
 {
     Set_Ouput_InterruptionTest();
 
@@ -609,7 +617,7 @@ void Set_Pulse_Program(void)
         //Linear prediction
         if((scenario.Engine_Speed<<1u)>scenario.Engine_Speed_old)
         {
-            scenario.engineSpeedPred = (scenario.Engine_Speed<<1u)-scenario.Engine_Speed_old;
+						scenario.engineSpeedPred = (scenario.Engine_Speed<<1u)-scenario.Engine_Speed_old;
             //scenario.tdutyInputSignalPredLinear = (RPM_const*calibFlashBlock.Calibration_RAM.sensorAngDisplecement)/(scenario.engineSpeedPred*360u);
         }
         else
@@ -622,17 +630,7 @@ void Set_Pulse_Program(void)
 
         scenario.TDuty_Input_Signal += scenario.nOverflow_FE*TMR2_16bits;
     }
-    else if(scenario.Measured_Period<EngineSpeedPeriod_Max)
-    {
-        //set flag Overspeed
-        //register the max engine speed
-    }
-    else
-    {
-        //Underspeed
-        //maybe I don´t need to register this because will happening all engine start event
-    }
-
+    
     Set_Ouput_InterruptionTest();
 }
 
@@ -674,7 +672,7 @@ void TPS_Treatment(void)
     else if(scenario.deltaTPS<quickCmdNeg)
     {
         //En-leanment fuel based in a table deltaTPS(temp)
-		Set_Output_LED_Red(ON);
+				Set_Output_LED_Red(ON);
         scenario.fastEnrichmentTerm=funcfastEnleanment(scenario.deltaTPS);   //0,8
         Cond6=TRUE;
     }
@@ -697,7 +695,7 @@ void TPS_Treatment(void)
 		if(Timeout_ms((scenario.TPS<tps_min_cutoff),&Counter7,TimeToGetInCutoff)
 		&&(scenario.Engine_Speed>threshould))
     {
-		scenario.cuttOffTerm=0;
+				scenario.cuttOffTerm=0;
     }
     else
     {
@@ -729,13 +727,13 @@ Transition time of the output voltage should not exceed 120mS from one level to 
 
 void LambdaCorrectionFunc(uint8_t lambdaRequested, uint8_t lambdaMeasured)
 {
-	static enum Lambda crtlStateOld=RICH;
+		static enum Lambda crtlStateOld=RICH;
 
-	//Cond5 -> Enrichment // Cond6 -> Enleanment
-	if((!scenario.EnabLambdaCtrl)||((Cond5)||(Cond6)))
-	{
-		return;
-	}
+		//Cond5 -> Enrichment // Cond6 -> Enleanment
+		if((!scenario.EnabLambdaCtrl)||((Cond5)||(Cond6)))
+		{
+				return;
+		}
 
     if(scenario.Lambda>lambdaVoltRichTheshould)
     {
@@ -759,28 +757,28 @@ void LambdaCorrectionFunc(uint8_t lambdaRequested, uint8_t lambdaMeasured)
 
 		if(scenario.LambDir!=crtlStateOld)
 		{
-			scenario.lambdaCorrectTerm=100;
+				scenario.lambdaCorrectTerm=100;
 		}
 
     //Proportional control
     switch(scenario.LambDir)
     {
-        case RICH:      if(scenario.lambdaCorrectTerm<=90)
+				case RICH:      if(scenario.lambdaCorrectTerm<=90)
                         {
-                            if(scenario.counterNeg==0)
+														if(scenario.counterNeg==0)
                             {
-								scenario.counterNeg=10;
+																scenario.counterNeg=10;
                                 scenario.lambdaCorrectTerm=100;
                             }
-							else
-							{
-								scenario.counterNeg--;
-							}
+														else
+														{
+																scenario.counterNeg--;
+														}
                         }
-						else
-						{
-							scenario.lambdaCorrectTerm=scenario.lambdaCorrectTerm-decrement;
-						}
+												else
+												{
+														scenario.lambdaCorrectTerm=scenario.lambdaCorrectTerm-decrement;
+												}
 
                         break;
 
@@ -788,25 +786,25 @@ void LambdaCorrectionFunc(uint8_t lambdaRequested, uint8_t lambdaMeasured)
                         {
                             if(scenario.counterPos==0)
                             {
-								scenario.counterPos=10;
+																scenario.counterPos=10;
                                 scenario.lambdaCorrectTerm=100;
                             }
-							else
-							{
-								scenario.counterPos--;
-							}
+														else
+														{
+																scenario.counterPos--;
+														}
                         }
-						else
-						{
-							scenario.lambdaCorrectTerm=scenario.lambdaCorrectTerm+increment;
-						}
+												else
+												{
+														scenario.lambdaCorrectTerm=scenario.lambdaCorrectTerm+increment;
+												}
 
                         break;
 
-        default:    	break;
+        default:    		break;
     }
 
-	crtlStateOld=scenario.LambDir;
+		crtlStateOld=scenario.LambDir;
 }
 
 uint8_t funcVoleff(uint8_t PMap,uint16_t Engine_Speed)
@@ -840,14 +838,14 @@ void VBatLinearization(void)
 
 void TPSLinearization(void)
 {
-	scenario.TPS=(100*(scenario.TPSRaw-tps_min))/(tps_max-tps_min);
+		scenario.TPS=(100*(scenario.TPSRaw-tps_min))/(tps_max-tps_min);
     //scenario.TPS=30;
 }
 
 void MAPLinearization(void)
 {
     scenario.PMap=(scenario.PMapRaw*110)/255;
-	scenario.PMap=101;
+		scenario.PMap=101;
 }
 
 void LambdaLinearization(void)
@@ -863,12 +861,12 @@ void EngineTempLinearization(void)
 void TairLinearization(void)
 {
     scenario.Tair=(scenario.TairRaw*150)/255;
-	scenario.Tair=45;
+		scenario.Tair=45;
 }
 
 void InjectorDeadTimeCalc(void)
 {
-	scenario.InjectorDeadTime=InjectorDeadTimeArray[0];
+		scenario.InjectorDeadTime=InjectorDeadTimeArray[0];
 }
 
 void Engine_STOP_test(void)
@@ -900,7 +898,7 @@ void Periodic_task(uint32_t period, void (*func)(void), sched_var var[], uint8_t
 
     if(var[pos].program == FALSE)
     {
-		var[pos].target_time = counter+period;
+				var[pos].target_time = counter+period;
         var[pos].program = TRUE;
     }
 
@@ -918,94 +916,94 @@ void Crank_Pos_IACV(void)
 
 void Open_IACV(void)
 {
-	__HAL_TIM_SET_COMPARE(&htim4,TIM_CHANNEL_1,2069);
+		__HAL_TIM_SET_COMPARE(&htim4,TIM_CHANNEL_1,2069);
 }
 
 void Close_IACV(void)
 {
-	__HAL_TIM_SET_COMPARE(&htim4,TIM_CHANNEL_1,69);
+		__HAL_TIM_SET_COMPARE(&htim4,TIM_CHANNEL_1,69);
 }
 
 uint16_t funcIdleSetpoint(uint8_t temp)
 {
-	//Here I need to create an array Engine Speed Target in function of Engine Temperature
-	pid_control.Engine_Speed_Setpoint=1300;
-	return(pid_control.Engine_Speed_Setpoint);
+		//Here I need to create an array Engine Speed Target in function of Engine Temperature
+		pid_control.Engine_Speed_Setpoint=1300;
+		return(pid_control.Engine_Speed_Setpoint);
 }
 
 void pid_Init(void)
 {
-	pid_control.CumError=0;
-	pid_control.Pwm_PI=0;
-	pid_control.Pwm_OUT=0;
-	pid_control.error_visual=0;
+		pid_control.CumError=0;
+		pid_control.Pwm_PI=0;
+		pid_control.Pwm_OUT=0;
+		pid_control.error_visual=0;
 }
 
 void IACV_Control(void)
 {
-	int32_t Error=0;
+		int32_t Error=0;
 
-	Error=funcIdleSetpoint(scenario.EngineTemp)-scenario.Engine_Speed;
-	pid_control.error_visual=Error;
+		Error=funcIdleSetpoint(scenario.EngineTemp)-scenario.Engine_Speed;
+		pid_control.error_visual=Error;
 
-	if((pid_control.Pwm_PI>=0)&&(pid_control.Pwm_PI<=2800u))
-	{
-		pid_control.CumError+=Error;
-	}
+		if((pid_control.Pwm_PI>=0)&&(pid_control.Pwm_PI<=2800u))
+		{
+				pid_control.CumError+=Error;
+		}
 
-	pid_control.Pwm_PI=(((pid_control.kpnum*pid_control.kidenum*Error)+(pid_control.kinum*pid_control.kpdenum*pid_control.CumError))/(pid_control.kpdenum*pid_control.kidenum));
+		pid_control.Pwm_PI=(((pid_control.kpnum*pid_control.kidenum*Error)+(pid_control.kinum*pid_control.kpdenum*pid_control.CumError))/(pid_control.kpdenum*pid_control.kidenum));
 
-	if((pid_control.Pwm_PI>=0)&&(pid_control.Pwm_PI<=2800u))
-	{
-		pid_control.Pwm_OUT=pid_control.Pwm_PI;
-	}
-	else
-	{
-		pid_control.Pwm_OUT=0u;
-	}
+		if((pid_control.Pwm_PI>=0)&&(pid_control.Pwm_PI<=2800u))
+		{
+				pid_control.Pwm_OUT=pid_control.Pwm_PI;
+		}
+		else
+		{
+				pid_control.Pwm_OUT=0u;
+		}
 
-	__HAL_TIM_SET_COMPARE(&htim4,TIM_CHANNEL_1,pid_control.Pwm_OUT);
+		__HAL_TIM_SET_COMPARE(&htim4,TIM_CHANNEL_1,pid_control.Pwm_OUT);
 }
 
 void Learn_test_IACV(void)
 {
-	__HAL_TIM_SET_COMPARE(&htim4,TIM_CHANNEL_1,0);
+		__HAL_TIM_SET_COMPARE(&htim4,TIM_CHANNEL_1,0);
 }
 
 void Idle_Management(void)
 {
-	static uint8_t enable_pid=OFF;
+		static uint8_t enable_pid=OFF;
 
-	if(scenario.TPS<min_tps_IDLE)
-	{
-		switch(scenario.Engine_State)
+		if(scenario.TPS<min_tps_IDLE)
 		{
-			case WAKEUP:
-			case PRIMERINJ: Learn_test_IACV();
+				switch(scenario.Engine_State)
+				{
+						case WAKEUP:
+						case PRIMERINJ: Learn_test_IACV();
 
-			case STOP:
-			case CRANK:
-			case STALL:		Crank_Pos_IACV();
-							enable_pid=1;
-						    break;
+						case STOP:
+						case CRANK:
+						case STALL:			Crank_Pos_IACV();
+														enable_pid=1;
+														break;
 
-			case IDLE:  	if(enable_pid)
-							{
-								enable_pid=OFF;
-								pid_Init();
-							}
+						case IDLE:  		if(enable_pid)
+														{
+																enable_pid=OFF;
+																pid_Init();
+														}
 
-							IACV_Control();
-							break;
+														IACV_Control();
+														break;
 
-			case CRUISE:
+						case CRUISE:
             case OVERSPEED: Open_IACV();
-							enable_pid=1;
-							break;
+														enable_pid=1;
+														break;
 
-			default:        break;
+						default:       	break;
+				}
 		}
-	}
 }
 
 //Detect engine acceleration and classify as: Pos, Neg or stable
@@ -1033,121 +1031,142 @@ void AccelDer(void)
 //This state machine define the engine state
 void Eng_Status(void)
 {
-	switch(scenario.Engine_State)
-	{
-		case WAKEUP:    ////Pump turn on
-						if(Read_Output_Pump()==OFF)
-						{
-							Set_Ouput_Pump(ON);
-							Cond0=TRUE;
-						}
+		switch(scenario.Engine_State)
+		{
+				case WAKEUP:    ////Pump turn on
+												if(Read_Output_Pump()==OFF)
+												{
+														Set_Ouput_Pump(ON);
+														Cond0=TRUE;
+												}
 
-						//Wait some time to fill fuel rail
-						if(Timeout_ms(Cond0,&Counter0,2000))
-						{
-							Cond0=FALSE;
-							Set_Ouput_Injector(ON);
-							Injector_CMD(PWM_100);
-							//setTimeoutHookUp(Timer0,PrimerPulse(scenario.EngineTemp),&TurnOffInjector);
-							setTimeoutHookUp(Timer0,PrimerPulse(90),&TurnOffInjector);
-							scenario.Engine_State=PRIMERINJ;
-						}
+												//Wait some time to fill fuel rail
+												if(Timeout_ms(Cond0,&Counter0,2000))
+												{
+														Cond0=FALSE;
+														Set_Ouput_Injector(ON);
+														Injector_CMD(PWM_100);
+														//setTimeoutHookUp(Timer0,PrimerPulse(scenario.EngineTemp),&TurnOffInjector);
+														setTimeoutHookUp(Timer0,PrimerPulse(90),&TurnOffInjector);
+														scenario.Engine_State=PRIMERINJ;
+												}
 
-						break;
+												break;
 
-		case PRIMERINJ: if(checkTimeoutHookUp(Timer0))
-						{
-							scenario.Engine_Speed=0;
-							Set_Output_LED_Green(ON);   //Crank allowed
-							scenario.Engine_State=STOP;
-						}
+				case PRIMERINJ: if(checkTimeoutHookUp(Timer0))
+												{
+														scenario.Engine_Speed=0;
+														Set_Output_LED_Green(ON);   //Crank allowed
+														scenario.Engine_State=STOP;
+												}
 
-						break;
+												break;
 
-		case STOP:      //I need to treat this statment
-						if(scenario.pulseDetected)
-						{
-							Cond2=TRUE;   //Enable timer, timer limit to launch engine
-							scenario.Engine_State=CRANK;
-						}
+				case STOP:      //I need to treat this statment
+												if(scenario.pulseDetected)
+												{
+														Cond2=TRUE;   //Enable timer, timer limit to launch engine
+														scenario.Engine_State=CRANK;
+												}
 
-						break;
+												break;
 
-		case CRANK:     if(scenario.Engine_Speed>idle_min)
-						{
-							//Enable the counter
-							Cond3=TRUE;
-							//Check if timer is elapsed
-							if(Timeout_ms(Cond3,&Counter3,3000))
-							{
-								Cond3=FALSE;
-								Counter3=0;
-								Set_Output_LED_Green(OFF);
-								scenario.Engine_State=IDLE;
-							}
-						}
-						else if((scenario.Acceleration==DECEL)||(Timeout_ms(Cond2,&Counter2,2000)))
-						{
-							Cond2=FALSE;
-							Counter2=0;
-							Cond4=TRUE;
-							scenario.Engine_State=STALL;
-						}
+				case CRANK:     if(scenario.Engine_Speed>idle_min)
+												{
+														//Enable the counter
+														Cond3=TRUE;
+														//Check if timer is elapsed
+														if(Timeout_ms(Cond3,&Counter3,3000))
+														{
+																Cond3=FALSE;
+																Counter3=0;
+																Set_Output_LED_Green(OFF);
+																scenario.Engine_State=IDLE;
+														}
+											  }
+												else if((scenario.Acceleration==DECEL)||(Timeout_ms(Cond2,&Counter2,2000)))
+												{
+														Cond2=FALSE;
+														Counter2=0;
+														Cond4=TRUE;
+														scenario.Engine_State=STALL;
+												}
 
-						break;
+												break;
 
-		case STALL:		if((scenario.Engine_Speed<rpm_stopped)||(Timeout_ms(Cond4,&Counter4,1500)))
-						{
-							Cond4=FALSE;
-							Counter4=0;
-							scenario.EngineDiedCounter++;
-							scenario.Engine_Speed=0;
-							Set_Output_LED_Green(ON);   //Crank allowed
-							scenario.Engine_State=STOP;
-						}
+				case STALL:			if((scenario.Engine_Speed<rpm_stopped)||(Timeout_ms(Cond4,&Counter4,1500)))
+												{
+														Cond4=FALSE;
+														Counter4=0;
+														scenario.EngineDiedCounter++;
+														scenario.Engine_Speed=0;
+														Set_Output_LED_Green(ON);   //Crank allowed
+														scenario.Engine_State=STOP;
+												}
 
-						break;
+												break;
 
-		case IDLE:      if(scenario.Engine_Speed>idle_max)
-						{
-							scenario.Engine_State=CRUISE;
-						}
-						else if(scenario.Engine_Speed<=idle_min)
-						{
-							scenario.Engine_State=STALL;
-							Cond4=TRUE;
-						}
+				case IDLE:      if(scenario.Engine_Speed>idle_max)
+												{
+														scenario.Engine_State=CRUISE;
+												}
+												else if(scenario.Engine_Speed<=idle_min)
+												{
+														scenario.Engine_State=STALL;
+														Cond4=TRUE;
+												}
+												
+												if(scenario.pulseDetected==0)
+												{
+														scenario.Engine_Speed=0;
+														Set_Output_LED_Green(ON);   //Crank allowed
+														scenario.Engine_State=STOP;
+												}	
 
-						break;
+												break;
 
-		case CRUISE:    if(scenario.Engine_Speed>rpm_max)
-						{
-							scenario.Engine_State=OVERSPEED;
-						}
-						else if(scenario.Engine_Speed<=idle_max)
-						{
-							scenario.Engine_State=IDLE;
-						}
+				case CRUISE:    if(scenario.Engine_Speed>rpm_max)
+												{
+														scenario.Engine_State=OVERSPEED;
+												}
+												else if(scenario.Engine_Speed<=idle_max)
+												{
+														scenario.Engine_State=IDLE;
+												}
+												
+												if(scenario.pulseDetected==0)
+												{
+														scenario.Engine_Speed=0;
+														Set_Output_LED_Green(ON);   //Crank allowed
+														scenario.Engine_State=STOP;
+												}	
 
-						break;
+												break;
 
-		case OVERSPEED: if(scenario.Engine_Speed<=(rpm_max-hyst))
-						{
-							scenario.Engine_State=CRUISE;
-						}
+				case OVERSPEED: if(scenario.Engine_Speed<=(rpm_max-hyst))
+												{
+														scenario.Engine_State=CRUISE;
+												}
+												
+												if(scenario.pulseDetected==0)
+												{
+														scenario.Engine_Speed=0;
+														Set_Output_LED_Green(ON);   //Crank allowed
+														scenario.Engine_State=STOP;
+												}	
 
-						break;
+												break;
 
-		default:        break;
-	}
+				default:       	break;
+	  }
 }
 
 void FuelCalc(void)
 {
-    if(scenario.Engine_State<CRANK)
+    if(scenario.Engine_State==STOP)
     {
-		//Here I have the primer pulse acting...
-        //scenario.PW_us=0;
+				scenario.PW_us=0;
+				Injector_CMD(scenario.PW_us);
     }
     else if(scenario.Engine_State==CRANK)
     {
@@ -1159,26 +1178,26 @@ void FuelCalc(void)
         }
         else
         {
-			/*
-			scenario.PMap=101;
-			scenario.Displacement=135;
-			scenario.Tair=45;
-			scenario.VoleffCrank=100;
-			scenario.crankTerm=100;
-			scenario.LambdaRequestedCrank=100;
-			scenario.AFRstoich=132;
-			scenario.Engine_Speed=800;
-			*/
+						/*
+						scenario.PMap=101;
+						scenario.Displacement=135;
+						scenario.Tair=45;
+						scenario.VoleffCrank=100;
+						scenario.crankTerm=100;
+						scenario.LambdaRequestedCrank=100;
+						scenario.AFRstoich=132;
+						scenario.Engine_Speed=800;
+						*/
 
             //After achieve Engine.State=Crank Enable to inject fixed fuel amount
             scenario.Airmass=(10*scenario.PMap*scenario.Displacement*scenario.VoleffCrank*funccrankTerm(scenario.EngineTemp))/((R_div_Mair*(scenario.Tair+273)));
-			scenario.Airmass=(scenario.Airmass*scenario.Engine_Speed)/3000;
-			scenario.Fuelmass=(10000*scenario.Airmass)/(scenario.AFRstoich*scenario.LambdaRequestedCrank);
-			scenario.Injectormassflow=scenario.Fuelmass;
-			scenario.PW_percent=scenario.Injectormassflow/375;
-			scenario.PW_us=(scenario.PW_percent*InjectorMaxTime)/1000;
-			scenario.PW_us=Saturation(scenario.PW_us,InjectorMaxTime);
-			Injector_CMD(scenario.PW_us);
+						scenario.Airmass=(scenario.Airmass*scenario.Engine_Speed)/3000;
+						scenario.Fuelmass=(10000*scenario.Airmass)/(scenario.AFRstoich*scenario.LambdaRequestedCrank);
+						scenario.Injectormassflow=scenario.Fuelmass;
+						scenario.PW_percent=scenario.Injectormassflow/375;
+						scenario.PW_us=(scenario.PW_percent*InjectorMaxTime)/1000;
+						scenario.PW_us=Saturation(scenario.PW_us,InjectorMaxTime);
+						Injector_CMD(scenario.PW_us);
         }
     }
     else if(scenario.Engine_State>CRANK)
@@ -1202,7 +1221,7 @@ void FuelCalc(void)
         {
             scenario.overspeedTerm=0;
             scenario.PW_us=0;
-			Injector_CMD(scenario.PW_us);
+						Injector_CMD(scenario.PW_us);
             return;
         }
 
@@ -1210,7 +1229,7 @@ void FuelCalc(void)
         scenario.LambdaRequested=funcLambda(scenario.PMap,scenario.Engine_Speed);
         LambdaCorrectionFunc(scenario.LambdaRequested,scenario.Lambda);
 
-		/*
+				/*
         scenario.PMap=101;
         scenario.Displacement=135;
         scenario.Tair=45;
@@ -1219,20 +1238,20 @@ void FuelCalc(void)
         scenario.fastEnrichmentTerm=100;
         scenario.crankTerm=100;
         scenario.lambdaCorrectTerm=100;
-		scenario.LambdaRequested=100;
+				scenario.LambdaRequested=100;
         scenario.AFRstoich=132;
         scenario.Engine_Speed=3000;
         */
 
-		scenario.Airmass=(1000*scenario.PMap*scenario.Displacement*scenario.Voleff)/((R_div_Mair*(scenario.Tair+273)));
-		scenario.Airmass=(scenario.Airmass*scenario.Engine_Speed)/3000;
-		scenario.Fuelmass=(10000*scenario.Airmass)/(scenario.AFRstoich*scenario.LambdaRequested);
-		scenario.TotalTerm=(scenario.warmUpTerm*scenario.fastEnrichmentTerm*scenario.lambdaCorrectTerm*scenario.cuttOffTerm*scenario.overspeedTerm)/1000;
-		scenario.Injectormassflow=(scenario.Fuelmass*scenario.TotalTerm)/1000;
-		scenario.PW_percent=scenario.Injectormassflow/375;
-		scenario.PW_us=(scenario.PW_percent*InjectorMaxTime)/1000;
-		scenario.PW_us=Saturation(scenario.PW_us,InjectorMaxTime);
-		Injector_CMD(scenario.PW_us);
+				scenario.Airmass=(1000*scenario.PMap*scenario.Displacement*scenario.Voleff)/((R_div_Mair*(scenario.Tair+273)));
+				scenario.Airmass=(scenario.Airmass*scenario.Engine_Speed)/3000;
+				scenario.Fuelmass=(10000*scenario.Airmass)/(scenario.AFRstoich*scenario.LambdaRequested);
+				scenario.TotalTerm=(scenario.warmUpTerm*scenario.fastEnrichmentTerm*scenario.lambdaCorrectTerm*scenario.cuttOffTerm*scenario.overspeedTerm)/1000;
+				scenario.Injectormassflow=(scenario.Fuelmass*scenario.TotalTerm)/1000;
+				scenario.PW_percent=scenario.Injectormassflow/375;
+				scenario.PW_us=(scenario.PW_percent*InjectorMaxTime)/1000;
+				scenario.PW_us=Saturation(scenario.PW_us,InjectorMaxTime);
+				Injector_CMD(scenario.PW_us);
     }
 }
 
@@ -1252,7 +1271,7 @@ void Task_Fast(void)
     //Fuel calculation
     AccelDer();
     InjectorDeadTimeCalc();
-	  //PulseDetection();
+	  PulseDetection();
     Eng_Status();
     FuelCalc();
 }
@@ -1309,6 +1328,11 @@ int main(void)
   MX_ADC1_Init();
   MX_USART3_UART_Init();
   /* USER CODE BEGIN 2 */
+	//VRS signal
+	HAL_TIM_IC_Start_IT(&htim2, TIM_CHANNEL_1);
+	HAL_TIM_IC_Start_IT(&htim2, TIM_CHANNEL_2);
+	HAL_TIM_Base_Start_IT(&htim2);	
+	
   Hardware_Init();
   HAL_ADC_Start_DMA(&hadc1,(uint32_t *)adcArray,7);
 	HAL_TIM_PWM_Start(&htim4,TIM_CHANNEL_1);
@@ -1319,20 +1343,20 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-        //Update the pulse calc scenario
-        if (scenario.Update_calc == TRUE)
-        {
-            Set_Pulse_Program();
-            scenario.Update_calc = FALSE;
-        }
+			//Update the pulse calc scenario
+      if (scenario.Update_calc == TRUE)
+      {
+					EngineSpeedCalculation();
+          scenario.Update_calc = FALSE;
+      }
 
-        //Scheduler
-        Periodic_task(  20,&Task_Fast,   array_sched_var, 0);  //20ms
-        Periodic_task( 100,&Task_Medium, array_sched_var, 1);  //100ms
-        Periodic_task(1000,&Task_Slow,   array_sched_var, 2);  //1s
+      //Scheduler
+      Periodic_task(  20,&Task_Fast,   array_sched_var, 0);  //20ms
+      Periodic_task( 100,&Task_Medium, array_sched_var, 1);  //100ms
+      Periodic_task(1000,&Task_Slow,   array_sched_var, 2);  //1s
 
-        //Timer Management
-        TimerListManagement(timerList);
+      //Timer Management
+      TimerListManagement(timerList);
 
     /* USER CODE END WHILE */
 
@@ -1798,6 +1822,11 @@ void Rising_Edge_Event(void)
     __HAL_TIM_SET_COUNTER(&htim2,0u);
     scenario.nOverflow = 0u;
     scenario.Rising_Edge_Counter++;
+	
+		if (scenario.Rising_Edge_Counter>=2)
+		{
+				scenario.Update_calc = 1;        //set zero after Engine Stop was detected
+		}	  
 }
 
 void Falling_Edge_Event(void)

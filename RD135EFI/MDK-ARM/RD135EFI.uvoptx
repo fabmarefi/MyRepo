@@ -190,6 +190,11 @@
           <WinNumber>1</WinNumber>
           <ItemText>pid_control</ItemText>
         </Ww>
+        <Ww>
+          <count>8</count>
+          <WinNumber>1</WinNumber>
+          <ItemText>\\RD135EFI\../Src/main.c\scenario.Rising_Edge_Counter</ItemText>
+        </Ww>
       </WatchWindow1>
       <WatchWindow2>
         <Ww>
