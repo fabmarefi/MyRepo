@@ -173,31 +173,31 @@ typedef struct system_info
     uint8_t  lambdaCorrectTerm;            //100
 		uint16_t TotalTerm;                    //100
 
-    uint8_t  VBatRaw;                      //0
+    uint16_t VBatRaw;                      //0
     uint8_t  VBatFilt;                     //0
     uint8_t  VBat;                         //0
 
-    uint8_t  VLambdaRaw;                   //0
+    uint16_t VLambdaRaw;                   //0
     uint8_t  VLambdaFilt;                  //0
     uint8_t  Lambda;                       //0
 
-    uint8_t  TempBoardRaw;                 //0
+    uint16_t TempBoardRaw;                 //0
     uint8_t  TempBoardFilt;                //0
     uint8_t  TempBoard;                    //0
 
-		uint8_t  TPSRaw;                       //0
+		uint16_t TPSRaw;                       //0
     uint8_t  TPSFilt;                      //0
     uint8_t  TPS;                          //0
 
-    uint8_t  PMapRaw;                      //0
+    uint16_t PMapRaw;                      //0
     uint8_t  PMapFilt;                     //0
     uint8_t  PMap;                         //0
 
-    uint8_t  TairRaw;                      //0
+    uint16_t TairRaw;                      //0
     uint8_t  TairFilt;                     //0
     uint8_t  Tair;                         //0
 
-    uint8_t  EngineTempRaw;                //0
+    uint16_t EngineTempRaw;                //0
     uint8_t  EngineTempFilt;               //0
     uint8_t  EngineTemp;                   //0
 }system_vars;
@@ -237,7 +237,7 @@ static void MX_ADC1_Init(void);
 static void MX_USART3_UART_Init(void);
 /* USER CODE BEGIN PFP */
 
-uint8_t adcArray[7];
+uint16_t adcArray[7];
 
 //Function prototypes
 void TPS_Treatment(void);
@@ -825,42 +825,46 @@ uint8_t funcCycles(uint8_t temp)
 void Board_Temp(void)
 {
     //Needs to apply a filter due the sensor characteristics
-    scenario.TempBoardFilt=digitalFilter8bits(scenario.TempBoardRaw,180);
+    scenario.TempBoardFilt=digitalFilter16bits(scenario.TempBoardRaw,180);
     scenario.TempBoard=((V25-scenario.TempBoardFilt)/Avg_Slope)+25;
 }
 
 void VBatLinearization(void)
 {
     //Needs to apply a filter besause the real circuit doesn´t have one...
-    scenario.VBatFilt=digitalFilter8bits(scenario.VBatRaw,180);
-    scenario.VBat=(scenario.VBatFilt*150)/255;
+    scenario.VBatFilt=digitalFilter16bits(scenario.VBatRaw,180);
+    scenario.VBat=(scenario.VBatFilt*150)/4095;
 }
 
 void TPSLinearization(void)
 {
-		scenario.TPS=(100*(scenario.TPSRaw-tps_min))/(tps_max-tps_min);
-    //scenario.TPS=30;
+		//scenario.TPS=(100*(scenario.TPSRaw-tps_min))/(tps_max-tps_min);	
+	  scenario.TPS=(100*scenario.TPSRaw)/4095;    
 }
 
 void MAPLinearization(void)
 {
-    scenario.PMap=(scenario.PMapRaw*110)/255;
+    //scenario.PMap=(scenario.PMapRaw*110)/255;
+	  scenario.PMap=(100*scenario.PMapRaw)/4095;
 		scenario.PMap=101;
 }
 
 void LambdaLinearization(void)
 {
-    scenario.Lambda=(scenario.VLambdaRaw*100)/85;
+    //scenario.Lambda=(scenario.VLambdaRaw*100)/85;
+	  scenario.Lambda=(100*scenario.PMapRaw)/4095;
 }
 
 void EngineTempLinearization(void)
 {
-    scenario.EngineTemp=(scenario.EngineTempRaw*180)/255;
+    //scenario.EngineTemp=(scenario.EngineTempRaw*180)/255;
+	  scenario.EngineTemp=(scenario.EngineTempRaw*255)/4095;
 }
 
 void TairLinearization(void)
 {
-    scenario.Tair=(scenario.TairRaw*150)/255;
+    //scenario.Tair=(scenario.TairRaw*150)/255;
+	  scenario.Tair=(scenario.TairRaw*150)/4095;
 		scenario.Tair=45;
 }
 
@@ -1271,14 +1275,14 @@ void Task_Fast(void)
     //Fuel calculation
     AccelDer();
     InjectorDeadTimeCalc();
-	  PulseDetection();
+	  //PulseDetection();
     Eng_Status();
     FuelCalc();
 }
 
 void Task_Medium(void)
 {
-    Idle_Management();
+    //Idle_Management();
 }
 
 void Task_Slow(void)
@@ -1334,7 +1338,8 @@ int main(void)
 	HAL_TIM_Base_Start_IT(&htim2);	
 	
   Hardware_Init();
-  HAL_ADC_Start_DMA(&hadc1,(uint32_t *)adcArray,7);
+  //HAL_ADC_Start_DMA(&hadc1,(uint32_t *)adcArray,7);
+	HAL_ADC_Start_DMA(&hadc1,(uint32_t *)adcArray,7);
 	HAL_TIM_PWM_Start(&htim4,TIM_CHANNEL_1);
 
   /* USER CODE END 2 */
