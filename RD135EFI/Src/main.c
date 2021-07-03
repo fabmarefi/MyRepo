@@ -68,17 +68,16 @@ DMA_HandleTypeDef hdma_usart3_rx;
 #define accel_rate                   150
 #define decel_rate                  -150
 #define maxPedalOnCrank               70
-#define rpm_max                     7000
+#define rpm_max                    11500
 #define hyst                         300
 #define rpm_stopped                  300
 #define idle_min                    1100
 #define idle_max                    1800
 #define quickCmdPos                   30
 #define quickCmdNeg                  -30
-#define threshould                  2500
 #define tfastenrich                 1000
-#define tfastenleanment              200
-#define tps_min_cutoff                45
+#define tfastenleanment             1000
+#define tps_min_cutoff                15
 #define increment                      1
 #define decrement                      1
 #define min_tps_IDLE                  30
@@ -108,7 +107,6 @@ enum TimerID{Timer0,Timer1,Timer2,Timer3,Timer4,Timer5,Timer6,Timer7,Timer8,Time
 enum EngineState{WAKEUP,PRIMERINJ,STOP,CRANK,STALL,IDLE,CRUISE,OVERSPEED};
 enum Accel{ACCEL,DECEL,STABLE};
 enum Lambda{RICH,LEAN,INACTIVE};
-
 
 typedef struct TimerStruct
 {
@@ -691,9 +689,8 @@ void TPS_Treatment(void)
     }
 
     //Pay attention, this function can overwrite enrichment function...
-    //if((scenario.TPS<tps_min_cutoff)&&(scenario.Engine_Speed>threshould))
-		if(Timeout_ms((scenario.TPS<tps_min_cutoff),&Counter7,TimeToGetInCutoff)
-		&&(scenario.Engine_Speed>threshould))
+    if(Timeout_ms((scenario.TPS<tps_min_cutoff),&Counter7,TimeToGetInCutoff)
+		&&(scenario.Engine_Speed>idle_max))
     {
 				scenario.cuttOffTerm=0;
     }
@@ -852,7 +849,7 @@ void MAPLinearization(void)
 void LambdaLinearization(void)
 {
     //scenario.Lambda=(scenario.VLambdaRaw*100)/85;
-	  scenario.Lambda=(100*scenario.PMapRaw)/4095;
+	  //scenario.Lambda=(100*scenario.VLambdaRaw)/4095;
 }
 
 void EngineTempLinearization(void)
@@ -915,17 +912,17 @@ void Periodic_task(uint32_t period, void (*func)(void), sched_var var[], uint8_t
 
 void Crank_Pos_IACV(void)
 {
-    __HAL_TIM_SET_COMPARE(&htim4,TIM_CHANNEL_1,pid_control.Pwm_OUT);
+    __HAL_TIM_SET_COMPARE(&htim4,TIM_CHANNEL_2,pid_control.Pwm_OUT);
 }
 
 void Open_IACV(void)
 {
-		__HAL_TIM_SET_COMPARE(&htim4,TIM_CHANNEL_1,2069);
+		__HAL_TIM_SET_COMPARE(&htim4,TIM_CHANNEL_2,2069);
 }
 
 void Close_IACV(void)
 {
-		__HAL_TIM_SET_COMPARE(&htim4,TIM_CHANNEL_1,69);
+		__HAL_TIM_SET_COMPARE(&htim4,TIM_CHANNEL_2,69);
 }
 
 uint16_t funcIdleSetpoint(uint8_t temp)
@@ -966,12 +963,12 @@ void IACV_Control(void)
 				pid_control.Pwm_OUT=0u;
 		}
 
-		__HAL_TIM_SET_COMPARE(&htim4,TIM_CHANNEL_1,pid_control.Pwm_OUT);
+		__HAL_TIM_SET_COMPARE(&htim4,TIM_CHANNEL_2,pid_control.Pwm_OUT);
 }
 
 void Learn_test_IACV(void)
 {
-		__HAL_TIM_SET_COMPARE(&htim4,TIM_CHANNEL_1,0);
+		__HAL_TIM_SET_COMPARE(&htim4,TIM_CHANNEL_2,0);
 }
 
 void Idle_Management(void)
@@ -1282,7 +1279,7 @@ void Task_Fast(void)
 
 void Task_Medium(void)
 {
-    //Idle_Management();
+    Idle_Management();
 }
 
 void Task_Slow(void)
@@ -1341,7 +1338,9 @@ int main(void)
   //HAL_ADC_Start_DMA(&hadc1,(uint32_t *)adcArray,7);
 	HAL_ADC_Start_DMA(&hadc1,(uint32_t *)adcArray,7);
 	HAL_TIM_PWM_Start(&htim4,TIM_CHANNEL_1);
-
+	
+	//Maybe in future I will don´t need PWM to control Idle valve
+  HAL_TIM_PWM_Start(&htim4,TIM_CHANNEL_2);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -1627,9 +1626,8 @@ static void MX_TIM4_Init(void)
   {
     Error_Handler();
   }
-  sConfigOC.OCMode = TIM_OCMODE_ACTIVE;
   sConfigOC.OCPolarity = TIM_OCPOLARITY_LOW;
-  if (HAL_TIM_OC_ConfigChannel(&htim4, &sConfigOC, TIM_CHANNEL_2) != HAL_OK)
+  if (HAL_TIM_PWM_ConfigChannel(&htim4, &sConfigOC, TIM_CHANNEL_2) != HAL_OK)
   {
     Error_Handler();
   }
@@ -1726,7 +1724,7 @@ static void MX_GPIO_Init(void)
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_12
                           |GPIO_PIN_13|GPIO_PIN_14|GPIO_PIN_15|GPIO_PIN_3
-                          |GPIO_PIN_4|GPIO_PIN_5|GPIO_PIN_7|GPIO_PIN_8, GPIO_PIN_RESET);
+                          |GPIO_PIN_4|GPIO_PIN_5|GPIO_PIN_8, GPIO_PIN_RESET);
 
   /*Configure GPIO pin : PC13 */
   GPIO_InitStruct.Pin = GPIO_PIN_13;
@@ -1763,11 +1761,9 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
   /*Configure GPIO pins : PB2 PB12 PB13 PB14
-                           PB15 PB3 PB4 PB5
-                           PB7 */
+                           PB15 PB3 PB4 PB5 */
   GPIO_InitStruct.Pin = GPIO_PIN_2|GPIO_PIN_12|GPIO_PIN_13|GPIO_PIN_14
-                          |GPIO_PIN_15|GPIO_PIN_3|GPIO_PIN_4|GPIO_PIN_5
-                          |GPIO_PIN_7;
+                          |GPIO_PIN_15|GPIO_PIN_3|GPIO_PIN_4|GPIO_PIN_5;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;

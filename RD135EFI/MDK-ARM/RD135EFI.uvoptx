@@ -188,7 +188,7 @@
         <Ww>
           <count>7</count>
           <WinNumber>1</WinNumber>
-          <ItemText>pid_control</ItemText>
+          <ItemText>pid_control,0x0A</ItemText>
         </Ww>
         <Ww>
           <count>8</count>
