@@ -172,31 +172,31 @@ typedef struct system_info
 		uint16_t TotalTerm;                    //100
 
     uint16_t VBatRaw;                      //0
-    uint8_t  VBatFilt;                     //0
+    uint16_t VBatFilt;                     //0
     uint8_t  VBat;                         //0
 
     uint16_t VLambdaRaw;                   //0
-    uint8_t  VLambdaFilt;                  //0
+    uint16_t VLambdaFilt;                  //0
     uint8_t  Lambda;                       //0
 
     uint16_t TempBoardRaw;                 //0
-    uint8_t  TempBoardFilt;                //0
+    uint16_t TempBoardFilt;                //0
     uint8_t  TempBoard;                    //0
 
 		uint16_t TPSRaw;                       //0
-    uint8_t  TPSFilt;                      //0
+    uint16_t TPSFilt;                      //0
     uint8_t  TPS;                          //0
 
     uint16_t PMapRaw;                      //0
-    uint8_t  PMapFilt;                     //0
+    uint16_t PMapFilt;                     //0
     uint8_t  PMap;                         //0
 
     uint16_t TairRaw;                      //0
-    uint8_t  TairFilt;                     //0
+    uint16_t TairFilt;                     //0
     uint8_t  Tair;                         //0
 
     uint16_t EngineTempRaw;                //0
-    uint8_t  EngineTempFilt;               //0
+    uint16_t EngineTempFilt;               //0
     uint8_t  EngineTemp;                   //0
 }system_vars;
 
@@ -222,6 +222,8 @@ volatile pid_vars pid_control={1300,0,0,600,1000,20,1000,0,0,0};
 uint16_t InjectorDeadTimeArray[8]={50,60,70,90,100,150,250,300};
 
 static uint32_t a,b,c,d,e,f,g,h;
+
+uint16_t test_filter=6969;
 
 /* USER CODE END PV */
 
@@ -478,16 +480,61 @@ uint8_t digitalFilter8bits(uint8_t var, uint8_t k)
     return(varFiltered);
 }
 
-uint16_t digitalFilter16bits(uint16_t var, uint8_t k)
+uint16_t digitalFilter16bits(uint16_t *varOld,uint16_t var,uint8_t k)
 {
-    static uint16_t varOld = 0u;
-    uint16_t varFiltered;
-
-    varFiltered = var + (((varOld-var)*k)/255u);
-    varOld = var;
+    //static uint16_t varOld=0u;
+		//uint16_t varFiltered;   //return to this after test
+    static uint16_t varFiltered;
+	  static int32_t z,x,y;		
+	
+		z=(int32_t)(*varOld-var);
+		x=(int32_t)(*varOld-var)*k;
+	  y=((int32_t)(*varOld-var)*k)/255u;
+	 
+    varFiltered=var+(((int32_t)(*varOld-var)*k*255)/255u);
+    *varOld=var;
 
     return(varFiltered);
 }
+
+/*
+//High pass filter
+
+s_word FilterHiPass ( 
+                  s_word U, 
+                  s_word Ft, 
+                  s_long *X, 
+                  s_word YOld )
+
+{
+   s_word Y;
+   
+   Y = U - (s_word)((*X) / 32768);
+   *X += (s_long)Ft * ((s_long)Y + YOld);
+   return(Y);
+}
+
+//Low Pass Filter
+u_word FilterLowPass (
+                  u_word NewVal,
+                  u_word Polo,
+                  u_word OldVal )
+{
+
+
+   s_word LowFilRetVal;
+   
+   LowFilRetVal = (s_word)OldVal - (s_word)NewVal;
+   LowFilRetVal = (s_word)(((s_long)Polo*LowFilRetVal)/32767) +(s_word)NewVal;
+   
+  return((u_word)LowFilRetVal);
+
+
+}
+
+PHydFilV = FilterLowPass ( PHydClrLocV, PHydZ1P, PHydFilV );
+
+*/
 
 void setTimeoutHookUp(enum TimerID timer,uint32_t period,void (*func)(void))
 {
@@ -822,15 +869,15 @@ uint8_t funcCycles(uint8_t temp)
 void Board_Temp(void)
 {
     //Needs to apply a filter due the sensor characteristics
-    scenario.TempBoardFilt=digitalFilter16bits(scenario.TempBoardRaw,180);
+    //scenario.TempBoardFilt=digitalFilter16bits(scenario.TempBoardRaw,180);
     scenario.TempBoard=((V25-scenario.TempBoardFilt)/Avg_Slope)+25;
 }
 
 void VBatLinearization(void)
 {
-    //Needs to apply a filter besause the real circuit doesn´t have one...
-    scenario.VBatFilt=digitalFilter16bits(scenario.VBatRaw,180);
-    scenario.VBat=(scenario.VBatFilt*150)/4095;
+    //Needs to apply a filter because the real circuit doesn´t have one...
+    scenario.VBatFilt=digitalFilter16bits(&test_filter,scenario.VBatRaw,10u);
+		scenario.VBat=(uint8_t)(((scenario.VBatFilt*347*455)/(4095*1000))+4);	  
 }
 
 void TPSLinearization(void)
