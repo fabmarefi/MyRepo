@@ -108,6 +108,29 @@ enum EngineState{WAKEUP,PRIMERINJ,STOP,CRANK,STALL,IDLE,CRUISE,OVERSPEED};
 enum Accel{ACCEL,DECEL,STABLE};
 enum Lambda{RICH,LEAN,INACTIVE};
 
+//Calibration values
+typedef struct Calibration
+{
+	uint16_t Max_Engine_Speed;	
+  uint16_t BP_Engine_Speed[8];
+  uint16_t BP_Engine_Temperature[8];
+	uint8_t BP_Delta_TPS[8];
+	uint8_t BP_MAP[8];
+	uint8_t BP_AirTemp[8];
+	uint8_t BP_Cycles[8];
+	uint8_t BP_WarmUp[8];
+}struct_Calibration;       
+
+volatile struct_Calibration Calibration_RAM = {8000,
+	                                            ////The first Engine Speed value in the array needs to be 1200 mandatory
+                                              {1200, 2000, 3000, 3500, 4500, 5000, 6000, 7000},
+																							{  64,   64,   64,   64,   64,   64,   64,   64},
+																							{  64,   64,   64,   64,   64,   64,   64,   64},
+																							{  64,   64,   64,   64,   64,   64,   64,   64},
+																							{ 200,  170,  160,  150,  140,  120,  105,   50},
+																							{ 145,  135,  125,  115,  110,  100,   95,   90},
+																							{  64,   64,   64,   64,   64,   64,   64,   64}};
+
 typedef struct TimerStruct
 {
     uint32_t target_time;
@@ -245,7 +268,8 @@ void Idle_Management(void);
 void FuelCalc(void);
 void Read_Analog_Sensors(void);
 void Board_Temp(void);
-uint8_t digitalFilter8bits(uint8_t var, uint8_t k);
+uint8_t Filter8bits(uint8_t varOld,uint8_t var,uint8_t k);
+uint16_t Filter16bits(uint16_t varOld,uint16_t var,uint8_t k);
 void VBatLinearization(void);
 void TPSLinearization(void);
 void MAPLinearization(void);
@@ -256,6 +280,8 @@ void LambdaCorrectionFunc(uint8_t lambdaRequested, uint8_t lambdaMeasured);
 uint8_t funcLambda(uint8_t PMap,uint16_t Engine_Speed);
 void InjectorDeadTimeCalc(void);
 void Injector_CMD(uint16_t pwm);
+uint8_t funcwarmUp(uint8_t temp);
+uint8_t funcCycles(uint8_t temp);
 
 //Led Green (Bluepill)
 void Toggle_LED_Green(void)
@@ -392,69 +418,66 @@ void Hardware_Init(void)
     Injector_CMD(PWM_0);
 }
 
-// A iterative binary search function. It returns
-// location of x in given array arr[l..r] if present,
-// otherwise -1
-uint8_t binarySearch(volatile uint16_t array[], uint8_t first, uint8_t last, uint16_t search)
-{
-    uint8_t middle;
-
-    middle = (first+last)>>1;
-
-    while (first <= last)
-    {
-				if((search >= array[middle])&&
-          (search <= array[middle+1]))
-        {
-						return middle;
-        }
-        else if(search > array[middle+1])
-        {
-            first = middle+1;
-        }
-        else //search < array[middle]
-        {
-            last = middle;
-        }
-
-        middle = (first + last)>>1;
-    }
-
-    return (255u);
-}
+// A iterative binary search function. It returns 
+// location of x in given array arr[l..r] if present, 
+// otherwise -1 
+int8_t binarySearch(uint16_t arr[], uint8_t l, uint8_t r, uint16_t x) 
+{ 
+		uint8_t m;
+	
+    while (l <= r) 
+		{ 
+        m = l + (r - l) / 2; 
+			  //m = (l + r) / 2; 
+			
+			  // Check if x is present at mid 
+        if ((x >= arr[m]) && (x <= arr[m+1])) 
+            return m; 
+  
+        // If x greater, ignore left half 
+        if (arr[m] < x) 
+            l = m + 1; 
+  
+        // If x is smaller, ignore right half 
+        else
+            r = m - 1; 
+    } 
+  
+    // if we reach here, then element was 
+    // not present 
+    return -1; 
+} 
 
 //This function was prepared to return a 8 bits value, however is saturated  in 64
 //Its mandatory in rpm array there are some difference value between two adjacent fields, if do not respect will cause an error return 0xFF
-uint8_t linearInterpolation(uint16_t value, volatile uint16_t x_array[], volatile uint8_t y_array[])
+uint8_t Linear_Interpolation(uint16_t value, uint16_t x_array[], uint8_t y_array[])
 {
-    uint8_t interp_index;
-    uint8_t interp_res;
-
+  int8_t interp_index;
+	uint8_t interp_res;
+	
+	interp_index = binarySearch(x_array, 0, 11, value);	
+	
+  if(interp_index != -1)
+  {
+    interp_res = (((y_array[interp_index+1]-y_array[interp_index])*(value-x_array[interp_index]))/(x_array[interp_index+1]-x_array[interp_index]))+y_array[interp_index];    		
+    return(interp_res);
+	}
+  else
+  {
     //Advance saturation for array min and max
     if(value<x_array[0])
     {
-        return(y_array[0]);
+      return(y_array[0]);
     }
     else if(value>x_array[11])
     {
-        return(y_array[11]);
+      return(y_array[11]);
     }
-
-    interp_index = binarySearch(x_array, 0, 11, value);
-
-    if(((x_array[interp_index+1]-x_array[interp_index])!=0)&&(interp_index!=255u))
-    {
-        interp_res = (((y_array[interp_index+1]-y_array[interp_index])*(value-x_array[interp_index]))/(x_array[interp_index+1]-x_array[interp_index]))+y_array[interp_index];
-        if(interp_res>64u)
-        {
-            interp_res = 64u;
-        }
-        return(interp_res);
-    }
-    else
-    {
-        return(255u);
-    }
+		else
+		{	
+			return(0xFF);     //return an error value...
+		}	
+  } 	
 }
 
 uint32_t Saturation(uint32_t var,uint32_t sat)
@@ -467,24 +490,23 @@ uint32_t Saturation(uint32_t var,uint32_t sat)
     return(var);
 }
 
-uint8_t digitalFilter8bits(uint8_t var, uint8_t k)
+uint8_t Filter8bits(uint8_t varOld,uint8_t var, uint8_t k)
 {
-    static uint8_t varOld = 0u;
-    uint8_t varFiltered;
+    int16_t varFiltered;
 
-    varFiltered = var + (((varOld-var)*k)/255u);
-    varOld = var;
+    varFiltered=(int16_t)varOld-(int16_t)var;
+    varFiltered=(int16_t)var+((int16_t)(((int16_t)k*varFiltered)/255));  
 
-    return(varFiltered);
+    return((uint8_t)varFiltered);
 }
 
 uint16_t Filter16bits(uint16_t varOld,uint16_t var,uint8_t k)
 {
-    static int32_t varFiltered;
-
+    int32_t varFiltered;
+	  
     varFiltered=(int32_t)varOld-(int32_t)var;
-    varFiltered=(int32_t)var+(int32_t)(((int32_t)k*varFiltered)/255);
-
+    varFiltered=(int32_t)var+((int32_t)(((int32_t)k*varFiltered)/255));    
+	
     return((uint16_t)varFiltered);
 }
 
@@ -769,7 +791,13 @@ void TPS_Treatment(void)
 
 uint8_t funcwarmUp(uint8_t temp)
 {
-    return (200);
+	  uint8_t resp;
+	
+	  resp=Linear_Interpolation(temp, Calibration_RAM.BP_Engine_Temperature, Calibration_RAM.BP_WarmUp);
+		//resp=Linear_Interpolation(eng_speed, Calibration_RAM.BP_Engine_Speed, Calibration_RAM.BP_Timing_Advance);
+	  //resp=200;
+	
+    return (resp);
 }
 
 uint8_t funccrankTerm(uint8_t temp)
@@ -881,27 +909,35 @@ uint8_t funcLambda(uint8_t PMap,uint16_t Engine_Speed)
 
 uint8_t funcCycles(uint8_t temp)
 {
-    return (100);
+    uint8_t resp;
+	
+	  resp=Linear_Interpolation(temp, Calibration_RAM.BP_Engine_Temperature, Calibration_RAM.BP_Cycles);
+		//resp=Linear_Interpolation(eng_speed, Calibration_RAM.BP_Engine_Speed, Calibration_RAM.BP_Timing_Advance);
+	  //resp=200;
+	
+    return (resp);
 }
 
 void Board_Temp(void)
 {
     //Needs to apply a filter due the sensor characteristics
-    scenario.TempBoardFilt=Filter16bits(scenario.TempBoardFilt,scenario.TempBoardRaw,255);
+    scenario.TempBoardFilt=Filter16bits(scenario.TempBoardFilt,scenario.TempBoardRaw,80u);
     scenario.TempBoard=((V25-scenario.TempBoardFilt)/Avg_Slope)+25;
 }
 
 void VBatLinearization(void)
 {
     //Needs to apply a filter because the real circuit doesn´t have one...
-    scenario.VBatFilt=Filter16bits(scenario.VBatFilt,scenario.VBatRaw,255u);
+    scenario.VBatFilt=Filter16bits(scenario.VBatFilt,scenario.VBatRaw,100u);
     scenario.VBat=(uint8_t)(((scenario.VBatFilt*347*455)/(4095*1000))+4);
 }
 
 void TPSLinearization(void)
 {
 		//scenario.TPS=(100*(scenario.TPSRaw-tps_min))/(tps_max-tps_min);
-	  scenario.TPS=(100*scenario.TPSRaw)/4095;
+	  //scenario.TPSFilt=Filter16bits(scenario.TPSFilt,scenario.TPSRaw,250u);
+	  scenario.TPSFilt=scenario.TPSRaw;
+	  scenario.TPS=(100*scenario.TPSFilt)/4095;
 }
 
 void MAPLinearization(void)
