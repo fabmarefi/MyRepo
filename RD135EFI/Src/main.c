@@ -692,6 +692,33 @@ uint8_t funcfastEnleanment(int8_t TPS)
     return(80);
 }
 
+void WarmUp_Treatment(void)
+{
+    if(scenario.counterCycles<funcCycles(scenario.EngineTemp))
+    {
+        scenario.warmUpTerm=funcwarmUp(scenario.EngineTemp);
+    }
+    else
+    {
+        scenario.warmUpTerm=100;
+    }
+}
+
+void Overspeed_Treatment(void)
+{
+    if(scenario.Engine_State!=OVERSPEED)
+    {
+        scenario.overspeedTerm=1;
+    }
+    else
+    {
+        scenario.overspeedTerm=0;
+        scenario.PW_us=0;
+        Injector_CMD(scenario.PW_us);
+        return;
+    }
+}  
+  
 /* Gas treatment */
 //create a automatic learning to get tps_min and tps_max
 void TPS_Treatment(void)
@@ -742,7 +769,7 @@ void TPS_Treatment(void)
 
 uint8_t funcwarmUp(uint8_t temp)
 {
-    return (130);
+    return (200);
 }
 
 uint8_t funccrankTerm(uint8_t temp)
@@ -910,21 +937,21 @@ void InjectorDeadTimeCalc(void)
 
 void Engine_STOP_test(void)
 {
-    static uint8_t program;
+    static uint8_t program=FALSE;
     static uint32_t initial_value;
 
-    if(program == FALSE)
+    if(program==FALSE)
     {
-        initial_value = scenario.Rising_Edge_Counter;
-        program = TRUE;
+        initial_value=scenario.Rising_Edge_Counter;
+        program=TRUE;
     }
     else
     {
-        if(scenario.Rising_Edge_Counter == initial_value)
+        if(scenario.Rising_Edge_Counter==initial_value)
         {
-            scenario.Rising_Edge_Counter = 0u;
-            scenario.Engine_Speed = 0u;
-            program = FALSE;
+            scenario.Rising_Edge_Counter=0u;
+            scenario.Engine_Speed=0u;
+            program=FALSE;
         }
     }
 }
@@ -1241,28 +1268,9 @@ void FuelCalc(void)
     }
     else if(scenario.Engine_State>CRANK)
     {
-        if(!(scenario.counterCycles>=funcCycles(scenario.EngineTemp)))
-        {
-            scenario.warmUpTerm=funcwarmUp(scenario.EngineTemp);
-        }
-        else
-        {
-            scenario.warmUpTerm=100;
-        }
-
+        WarmUp_Treatment();
         TPS_Treatment();
-
-        if(scenario.Engine_State!=OVERSPEED)
-        {
-            scenario.overspeedTerm=1;
-        }
-        else
-        {
-            scenario.overspeedTerm=0;
-            scenario.PW_us=0;
-						Injector_CMD(scenario.PW_us);
-            return;
-        }
+        Overspeed_Treatment();
 
         scenario.Voleff=funcVoleff(scenario.PMap,scenario.Engine_Speed);
         scenario.LambdaRequested=funcLambda(scenario.PMap,scenario.Engine_Speed);
