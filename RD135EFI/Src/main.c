@@ -223,8 +223,6 @@ uint16_t InjectorDeadTimeArray[8]={50,60,70,90,100,150,250,300};
 
 static uint32_t a,b,c,d,e,f,g,h;
 
-uint16_t test_filter=6969;
-
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -480,35 +478,28 @@ uint8_t digitalFilter8bits(uint8_t var, uint8_t k)
     return(varFiltered);
 }
 
-uint16_t digitalFilter16bits(uint16_t *varOld,uint16_t var,uint8_t k)
+uint16_t Filter16bits(uint16_t varOld,uint16_t var,uint8_t k)
 {
-    //static uint16_t varOld=0u;
-		//uint16_t varFiltered;   //return to this after test
-    static uint16_t varFiltered;
-	  static int32_t z,x,y;		
-	
-		z=(int32_t)(*varOld-var);
-		x=(int32_t)(*varOld-var)*k;
-	  y=((int32_t)(*varOld-var)*k)/255u;
-	 
-    varFiltered=var+(((int32_t)(*varOld-var)*k*255)/255u);
-    *varOld=var;
+    static int32_t varFiltered;
 
-    return(varFiltered);
+    varFiltered=(int32_t)varOld-(int32_t)var;
+    varFiltered=(int32_t)var+(int32_t)(((int32_t)k*varFiltered)/255);
+
+    return((uint16_t)varFiltered);
 }
 
 /*
 //High pass filter
 
-s_word FilterHiPass ( 
-                  s_word U, 
-                  s_word Ft, 
-                  s_long *X, 
+s_word FilterHiPass (
+                  s_word U,
+                  s_word Ft,
+                  s_long *X,
                   s_word YOld )
 
 {
    s_word Y;
-   
+
    Y = U - (s_word)((*X) / 32768);
    *X += (s_long)Ft * ((s_long)Y + YOld);
    return(Y);
@@ -523,10 +514,10 @@ u_word FilterLowPass (
 
 
    s_word LowFilRetVal;
-   
+
    LowFilRetVal = (s_word)OldVal - (s_word)NewVal;
    LowFilRetVal = (s_word)(((s_long)Polo*LowFilRetVal)/32767) +(s_word)NewVal;
-   
+
   return((u_word)LowFilRetVal);
 
 
@@ -601,28 +592,28 @@ uint8_t Timeout_ms(uint8_t Condition,uint32_t *timer,uint32_t period)
 }
 
 void PulseDetection(void)
-{	
+{
 	  static uint32_t CounterPulseNow,CounterPulseOld;
-	
+
 		Cond8=TRUE;
-	
+
 	  CounterPulseNow=scenario.Rising_Edge_Counter;
-	  
+
 		if((CounterPulseNow-CounterPulseOld)>=1)
-		{	
+		{
 				scenario.pulseDetected=1;
-		}	
+		}
 		else
-		{	
+		{
 			  if(Timeout_ms(Cond8,&Counter8,600))
 				{
 						Cond8=FALSE;
 						scenario.pulseDetected=0;
-				}	
-		}		
-		
+				}
+		}
+
 		CounterPulseOld=CounterPulseNow;
-}	
+}
 
 uint32_t PrimerPulse(uint8_t temp)
 {
@@ -675,7 +666,7 @@ void EngineSpeedCalculation(void)
 
         scenario.TDuty_Input_Signal += scenario.nOverflow_FE*TMR2_16bits;
     }
-    
+
     Set_Ouput_InterruptionTest();
 }
 
@@ -869,21 +860,21 @@ uint8_t funcCycles(uint8_t temp)
 void Board_Temp(void)
 {
     //Needs to apply a filter due the sensor characteristics
-    //scenario.TempBoardFilt=digitalFilter16bits(scenario.TempBoardRaw,180);
+    scenario.TempBoardFilt=Filter16bits(scenario.TempBoardFilt,scenario.TempBoardRaw,255);
     scenario.TempBoard=((V25-scenario.TempBoardFilt)/Avg_Slope)+25;
 }
 
 void VBatLinearization(void)
 {
     //Needs to apply a filter because the real circuit doesn´t have one...
-    scenario.VBatFilt=digitalFilter16bits(&test_filter,scenario.VBatRaw,10u);
-		scenario.VBat=(uint8_t)(((scenario.VBatFilt*347*455)/(4095*1000))+4);	  
+    scenario.VBatFilt=Filter16bits(scenario.VBatFilt,scenario.VBatRaw,255u);
+    scenario.VBat=(uint8_t)(((scenario.VBatFilt*347*455)/(4095*1000))+4);
 }
 
 void TPSLinearization(void)
 {
-		//scenario.TPS=(100*(scenario.TPSRaw-tps_min))/(tps_max-tps_min);	
-	  scenario.TPS=(100*scenario.TPSRaw)/4095;    
+		//scenario.TPS=(100*(scenario.TPSRaw-tps_min))/(tps_max-tps_min);
+	  scenario.TPS=(100*scenario.TPSRaw)/4095;
 }
 
 void MAPLinearization(void)
@@ -1163,13 +1154,13 @@ void Eng_Status(void)
 														scenario.Engine_State=STALL;
 														Cond4=TRUE;
 												}
-												
+
 												if(scenario.pulseDetected==0)
 												{
 														scenario.Engine_Speed=0;
 														Set_Output_LED_Green(ON);   //Crank allowed
 														scenario.Engine_State=STOP;
-												}	
+												}
 
 												break;
 
@@ -1181,13 +1172,13 @@ void Eng_Status(void)
 												{
 														scenario.Engine_State=IDLE;
 												}
-												
+
 												if(scenario.pulseDetected==0)
 												{
 														scenario.Engine_Speed=0;
 														Set_Output_LED_Green(ON);   //Crank allowed
 														scenario.Engine_State=STOP;
-												}	
+												}
 
 												break;
 
@@ -1195,13 +1186,13 @@ void Eng_Status(void)
 												{
 														scenario.Engine_State=CRUISE;
 												}
-												
+
 												if(scenario.pulseDetected==0)
 												{
 														scenario.Engine_Speed=0;
 														Set_Output_LED_Green(ON);   //Crank allowed
 														scenario.Engine_State=STOP;
-												}	
+												}
 
 												break;
 
@@ -1379,13 +1370,13 @@ int main(void)
 	//VRS signal
 	HAL_TIM_IC_Start_IT(&htim2, TIM_CHANNEL_1);
 	HAL_TIM_IC_Start_IT(&htim2, TIM_CHANNEL_2);
-	HAL_TIM_Base_Start_IT(&htim2);	
-	
+	HAL_TIM_Base_Start_IT(&htim2);
+
   Hardware_Init();
   //HAL_ADC_Start_DMA(&hadc1,(uint32_t *)adcArray,7);
 	HAL_ADC_Start_DMA(&hadc1,(uint32_t *)adcArray,7);
 	HAL_TIM_PWM_Start(&htim4,TIM_CHANNEL_1);
-	
+
 	//Maybe in future I will don´t need PWM to control Idle valve
   HAL_TIM_PWM_Start(&htim4,TIM_CHANNEL_2);
   /* USER CODE END 2 */
@@ -1870,11 +1861,11 @@ void Rising_Edge_Event(void)
     __HAL_TIM_SET_COUNTER(&htim2,0u);
     scenario.nOverflow = 0u;
     scenario.Rising_Edge_Counter++;
-	
+
 		if (scenario.Rising_Edge_Counter>=2)
 		{
 				scenario.Update_calc = 1;        //set zero after Engine Stop was detected
-		}	  
+		}
 }
 
 void Falling_Edge_Event(void)
