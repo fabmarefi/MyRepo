@@ -113,23 +113,23 @@ typedef struct Calibration
 {
 	uint16_t Max_Engine_Speed;	
   uint16_t BP_Engine_Speed[8];
-  uint16_t BP_Engine_Temperature[8];
+  uint8_t BP_Engine_Temperature[8];
 	uint8_t BP_Delta_TPS[8];
 	uint8_t BP_MAP[8];
 	uint8_t BP_AirTemp[8];
-	uint8_t BP_Cycles[8];
+	uint16_t BP_Cycles[8];
 	uint8_t BP_WarmUp[8];
 }struct_Calibration;       
 
 volatile struct_Calibration Calibration_RAM = {8000,
 	                                            ////The first Engine Speed value in the array needs to be 1200 mandatory
                                               {1200, 2000, 3000, 3500, 4500, 5000, 6000, 7000},
-																							{  64,   64,   64,   64,   64,   64,   64,   64},
+																							{  10,   30,   45,   55,   80,  100,  120,  150},
 																							{  64,   64,   64,   64,   64,   64,   64,   64},
 																							{  64,   64,   64,   64,   64,   64,   64,   64},
 																							{ 200,  170,  160,  150,  140,  120,  105,   50},
-																							{ 145,  135,  125,  115,  110,  100,   95,   90},
-																							{  64,   64,   64,   64,   64,   64,   64,   64}};
+																							{ 500, 1000, 1500, 2500, 4000,15000,25000,60000},
+																							{ 145,  135,  125,  115,  110,  100,   95,   90}};
 
 typedef struct TimerStruct
 {
@@ -455,7 +455,7 @@ uint8_t Linear_Interpolation(uint16_t value, uint16_t x_array[], uint8_t y_array
   int8_t interp_index;
 	uint8_t interp_res;
 	
-	interp_index = binarySearch(x_array, 0, 11, value);	
+	interp_index = binarySearch(x_array, 0, 7, value);	
 	
   if(interp_index != -1)
   {
@@ -469,9 +469,124 @@ uint8_t Linear_Interpolation(uint16_t value, uint16_t x_array[], uint8_t y_array
     {
       return(y_array[0]);
     }
-    else if(value>x_array[11])
+    else if(value>x_array[7])
     {
-      return(y_array[11]);
+      return(y_array[7]);
+    }
+		else
+		{	
+			return(0xFF);     //return an error value...
+		}	
+  } 	
+}
+
+//Xoxo
+int8_t caraio(uint8_t arr[], uint8_t l, uint8_t r, uint8_t x) 
+{ 
+		uint8_t m;
+	
+    while (l <= r) 
+		{ 
+        m = l + (r - l) / 2; 
+			  //m = (l + r) / 2; 
+			
+			  // Check if x is present at mid 
+        if ((x >= arr[m]) && (x <= arr[m+1])) 
+            return m; 
+  
+        // If x greater, ignore left half 
+        if (arr[m] < x) 
+            l = m + 1; 
+  
+        // If x is smaller, ignore right half 
+        else
+            r = m - 1; 
+    } 
+  
+    // if we reach here, then element was 
+    // not present 
+    return -1; 
+} 
+
+uint16_t buceta(uint8_t value, uint8_t x_array[], uint16_t y_array[])
+{
+  int8_t interp_index;
+	uint16_t interp_res;
+	
+	interp_index = caraio(x_array, 0, 7, value);	
+	
+  if(interp_index != -1)
+  {
+    interp_res = (((y_array[interp_index+1]-y_array[interp_index])*(value-x_array[interp_index]))/(x_array[interp_index+1]-x_array[interp_index]))+y_array[interp_index];    		
+    return(interp_res);
+	}
+  else
+  {
+    //Advance saturation for array min and max
+    if(value<x_array[0])
+    {
+      return(y_array[0]);
+    }
+    else if(value>x_array[7])
+    {
+      return(y_array[7]);
+    }
+		else
+		{	
+			return(0xFF);     //return an error value...
+		}	
+  } 	
+}
+
+int8_t morcega(uint8_t arr[], uint8_t l, uint8_t r, uint8_t x) 
+{ 
+		uint8_t m;
+	
+    while (l <= r) 
+		{ 
+        m = l + (r - l) / 2; 
+			  //m = (l + r) / 2; 
+			
+			  // Check if x is present at mid 
+        if ((x >= arr[m]) && (x <= arr[m+1])) 
+            return m; 
+  
+        // If x greater, ignore left half 
+        if (arr[m] < x) 
+            l = m + 1; 
+  
+        // If x is smaller, ignore right half 
+        else
+            r = m - 1; 
+    } 
+  
+    // if we reach here, then element was 
+    // not present 
+    return -1; 
+} 
+
+uint8_t panceta(uint8_t value, uint8_t x_array[], uint8_t y_array[])
+{
+  int8_t interp_index;
+	uint16_t interp_res;
+	
+	interp_index = morcega(x_array, 0, 7, value);	
+	
+  if(interp_index != -1)
+  {
+    interp_res = (((y_array[interp_index+1]-y_array[interp_index])*(value-x_array[interp_index]))/(x_array[interp_index+1]-x_array[interp_index]))+y_array[interp_index];    		
+    return(interp_res);
+	}
+  else
+  {
+    //Advance saturation for array min and max
+    if(value<x_array[0])
+    {
+      return(y_array[0]);
+    }
+    else if(value>x_array[7])
+    {
+      return(y_array[7]);
     }
 		else
 		{	
@@ -662,31 +777,31 @@ void EngineSpeedCalculation(void)
 {
     Set_Ouput_InterruptionTest();
 
-    scenario.Measured_Period += scenario.nOverflow_RE*TMR2_16bits;
+    scenario.Measured_Period+=scenario.nOverflow_RE*TMR2_16bits;
 
     //Engine speed must be greater than 100rpm and less than 15000rpm to consider Measured_Period useful for calculations
     if((scenario.Measured_Period<=EngineSpeedPeriod_Min)&&
        (scenario.Measured_Period>=EngineSpeedPeriod_Max))
     {
-        scenario.Engine_Speed = RPM_const/scenario.Measured_Period;
-        scenario.Engine_Speed_old = scenario.Engine_Speed;
-        scenario.deltaEngineSpeed = scenario.Engine_Speed-scenario.Engine_Speed_old;
+        scenario.Engine_Speed=RPM_const/scenario.Measured_Period;
+        scenario.Engine_Speed_old=scenario.Engine_Speed;
+        scenario.deltaEngineSpeed=scenario.Engine_Speed-scenario.Engine_Speed_old;
 
         //Linear prediction
         if((scenario.Engine_Speed<<1u)>scenario.Engine_Speed_old)
         {
-						scenario.engineSpeedPred = (scenario.Engine_Speed<<1u)-scenario.Engine_Speed_old;
+						scenario.engineSpeedPred=(scenario.Engine_Speed<<1u)-scenario.Engine_Speed_old;
             //scenario.tdutyInputSignalPredLinear = (RPM_const*calibFlashBlock.Calibration_RAM.sensorAngDisplecement)/(scenario.engineSpeedPred*360u);
         }
         else
         {
-            scenario.engineSpeedPred = 0u;
+            scenario.engineSpeedPred=0u;
         }
 
         //For calculus purpose I decided to use the linear prediction
-        scenario.Engine_Speed = scenario.engineSpeedPred;
+        scenario.Engine_Speed=scenario.engineSpeedPred;
 
-        scenario.TDuty_Input_Signal += scenario.nOverflow_FE*TMR2_16bits;
+        scenario.TDuty_Input_Signal+=scenario.nOverflow_FE*TMR2_16bits;
     }
 
     Set_Ouput_InterruptionTest();
@@ -793,8 +908,8 @@ uint8_t funcwarmUp(uint8_t temp)
 {
 	  uint8_t resp;
 	
-	  resp=Linear_Interpolation(temp, Calibration_RAM.BP_Engine_Temperature, Calibration_RAM.BP_WarmUp);
-		//resp=Linear_Interpolation(eng_speed, Calibration_RAM.BP_Engine_Speed, Calibration_RAM.BP_Timing_Advance);
+	  //resp=Linear_Interpolation(temp,Calibration_RAM.BP_Engine_Temperature,Calibration_RAM.BP_WarmUp);
+	  resp=panceta(temp,Calibration_RAM.BP_Engine_Temperature,Calibration_RAM.BP_WarmUp);
 	  //resp=200;
 	
     return (resp);
@@ -909,11 +1024,12 @@ uint8_t funcLambda(uint8_t PMap,uint16_t Engine_Speed)
 
 uint8_t funcCycles(uint8_t temp)
 {
-    uint8_t resp;
+    static uint16_t resp;
 	
-	  resp=Linear_Interpolation(temp, Calibration_RAM.BP_Engine_Temperature, Calibration_RAM.BP_Cycles);
-		//resp=Linear_Interpolation(eng_speed, Calibration_RAM.BP_Engine_Speed, Calibration_RAM.BP_Timing_Advance);
-	  //resp=200;
+	  //resp=Linear_Interpolation(temp,Calibration_RAM.BP_Engine_Temperature,Calibration_RAM.BP_Cycles);
+	  //resp=buceta(temp,Calibration_RAM.BP_Engine_Temperature,Calibration_RAM.BP_Cycles);
+	  resp=buceta(70,Calibration_RAM.BP_Engine_Temperature,Calibration_RAM.BP_Cycles);
+		//resp=200;
 	
     return (resp);
 }
@@ -956,7 +1072,8 @@ void LambdaLinearization(void)
 void EngineTempLinearization(void)
 {
     //scenario.EngineTemp=(scenario.EngineTempRaw*180)/255;
-	  scenario.EngineTemp=(scenario.EngineTempRaw*255)/4095;
+	  scenario.EngineTemp=(scenario.EngineTempRaw*150)/4095;
+	  scenario.EngineTemp=90;
 }
 
 void TairLinearization(void)
