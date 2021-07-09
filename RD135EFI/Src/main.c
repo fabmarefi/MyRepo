@@ -119,6 +119,8 @@ typedef struct Calibration
 	uint8_t BP_AirTemp[8];
 	uint16_t BP_Cycles[8];
 	uint8_t BP_WarmUp[8];
+	uint8_t TB_Volef[8][8];
+	uint8_t TB_LambdaTarget[8][8];
 }struct_Calibration;       
 
 volatile struct_Calibration Calibration_RAM = {8000,
@@ -129,7 +131,23 @@ volatile struct_Calibration Calibration_RAM = {8000,
 																							{  64,   64,   64,   64,   64,   64,   64,   64},
 																							{ 200,  170,  160,  150,  140,  120,  105,   50},
 																							{ 500, 1000, 1500, 2500, 4000,15000,25000,60000},
-																							{ 145,  135,  125,  115,  110,  100,   95,   90}};
+																							{ 145,  135,  125,  115,  110,  100,   95,   90},
+																						  {{ 50,  100,  100,  100,  100,  100,  100,  100},
+																						  {  45,  100,  100,  100,  100,  100,  100,  100},
+																						  {  40,  100,  100,  100,  100,  100,  100,  100},
+																						  {  30,  100,  100,  100,  100,  100,  100,  100},
+																						  {  25,  100,  100,  100,  100,  100,  100,  100},
+																						  {  20,  100,  100,  100,  100,  100,  100,  100},
+																						  {  15,  100,  100,  100,  100,  100,  100,  100},
+																						  {   5,  100,  100,  100,  100,  100,  100,  100}},
+                                             {{  90,   90,   90,   90,   90,   90,   90,   90},
+																						  { 100,  100,  100,  100,  100,  100,  100,  100},
+																						  { 100,  100,  100,  100,  100,  100,  100,  100},
+																						  { 100,  100,  100,  100,  100,  100,  100,  100},
+																						  { 100,  100,  100,  100,  100,  100,  100,  100},
+																						  { 100,  100,  100,  100,  100,  100,  100,  100},
+																						  { 100,  100,  100,  100,  100,  100,  100,  100},
+																						  { 100,  100,  100,  100,  100,  100,  100,  100}}};
 
 typedef struct TimerStruct
 {
@@ -244,7 +262,7 @@ volatile pid_vars pid_control={1300,0,0,600,1000,20,1000,0,0,0};
 
 uint16_t InjectorDeadTimeArray[8]={50,60,70,90,100,150,250,300};
 
-static uint32_t a,b,c,d,e,f,g,h;
+//static uint32_t a,b,c,d,e,f,g,h;
 
 /* USER CODE END PV */
 
@@ -281,7 +299,7 @@ uint8_t funcLambda(uint8_t PMap,uint16_t Engine_Speed);
 void InjectorDeadTimeCalc(void);
 void Injector_CMD(uint16_t pwm);
 uint8_t funcwarmUp(uint8_t temp);
-uint8_t funcCycles(uint8_t temp);
+uint16_t funcCycles(uint8_t temp);
 
 //Led Green (Bluepill)
 void Toggle_LED_Green(void)
@@ -452,36 +470,36 @@ int8_t binarySearch(uint16_t arr[], uint8_t l, uint8_t r, uint16_t x)
 //Its mandatory in rpm array there are some difference value between two adjacent fields, if do not respect will cause an error return 0xFF
 uint8_t Linear_Interpolation(uint16_t value, uint16_t x_array[], uint8_t y_array[])
 {
-  int8_t interp_index;
-	uint8_t interp_res;
+		int8_t interp_index;
+		uint8_t interp_res;
 	
-	interp_index = binarySearch(x_array, 0, 7, value);	
+		interp_index = binarySearch(x_array, 0, 7, value);	
 	
-  if(interp_index != -1)
-  {
-    interp_res = (((y_array[interp_index+1]-y_array[interp_index])*(value-x_array[interp_index]))/(x_array[interp_index+1]-x_array[interp_index]))+y_array[interp_index];    		
-    return(interp_res);
-	}
-  else
-  {
-    //Advance saturation for array min and max
-    if(value<x_array[0])
-    {
-      return(y_array[0]);
-    }
-    else if(value>x_array[7])
-    {
-      return(y_array[7]);
-    }
+		if(interp_index != -1)
+		{
+				interp_res = (((y_array[interp_index+1]-y_array[interp_index])*(value-x_array[interp_index]))/(x_array[interp_index+1]-x_array[interp_index]))+y_array[interp_index];    		
+				return(interp_res);
+		}
 		else
-		{	
-			return(0xFF);     //return an error value...
-		}	
-  } 	
+		{
+				//Advance saturation for array min and max
+				if(value<x_array[0])
+				{
+						return(y_array[0]);
+				}
+				else if(value>x_array[7])
+				{
+						return(y_array[7]);
+				}
+				else
+				{	
+						return(0xFF);     //return an error value...
+				}	
+		} 	
 }
 
 //Xoxo
-int8_t caraio(uint8_t arr[], uint8_t l, uint8_t r, uint8_t x) 
+int8_t caraio(volatile uint8_t arr[], uint8_t l, uint8_t r, uint8_t x) 
 { 
 		uint8_t m;
 	
@@ -508,37 +526,37 @@ int8_t caraio(uint8_t arr[], uint8_t l, uint8_t r, uint8_t x)
     return -1; 
 } 
 
-uint16_t buceta(uint8_t value, uint8_t x_array[], uint16_t y_array[])
+uint16_t buceta(uint8_t value,volatile uint8_t x_array[],volatile uint16_t y_array[])
 {
-  int8_t interp_index;
-	uint16_t interp_res;
+		int8_t interp_index;
+		uint16_t interp_res;
 	
-	interp_index = caraio(x_array, 0, 7, value);	
+		interp_index = caraio(x_array, 0, 7, value);	
 	
-  if(interp_index != -1)
-  {
-    interp_res = (((y_array[interp_index+1]-y_array[interp_index])*(value-x_array[interp_index]))/(x_array[interp_index+1]-x_array[interp_index]))+y_array[interp_index];    		
-    return(interp_res);
-	}
-  else
-  {
-    //Advance saturation for array min and max
-    if(value<x_array[0])
-    {
-      return(y_array[0]);
-    }
-    else if(value>x_array[7])
-    {
-      return(y_array[7]);
-    }
+		if(interp_index != -1)
+		{
+				interp_res = (((y_array[interp_index+1]-y_array[interp_index])*(value-x_array[interp_index]))/(x_array[interp_index+1]-x_array[interp_index]))+y_array[interp_index];    		
+				return(interp_res);
+		}
 		else
-		{	
-			return(0xFF);     //return an error value...
-		}	
-  } 	
+		{
+				//Advance saturation for array min and max
+				if(value<x_array[0])
+				{
+						return(y_array[0]);
+				}
+				else if(value>x_array[7])
+				{
+						return(y_array[7]);
+				}
+				else
+				{	
+						return(0xFF);     //return an error value...
+				}	
+		} 	
 }
 
-int8_t morcega(uint8_t arr[], uint8_t l, uint8_t r, uint8_t x) 
+int8_t morcega(volatile uint8_t arr[], uint8_t l, uint8_t r, uint8_t x) 
 { 
 		uint8_t m;
 	
@@ -565,34 +583,34 @@ int8_t morcega(uint8_t arr[], uint8_t l, uint8_t r, uint8_t x)
     return -1; 
 } 
 
-uint8_t panceta(uint8_t value, uint8_t x_array[], uint8_t y_array[])
+uint8_t panceta(uint8_t value, volatile uint8_t x_array[], volatile uint8_t y_array[])
 {
-  int8_t interp_index;
-	uint16_t interp_res;
+		int8_t interp_index;
+		uint16_t interp_res;
 	
-	interp_index = morcega(x_array, 0, 7, value);	
+		interp_index = morcega(x_array, 0, 7, value);	
 	
-  if(interp_index != -1)
-  {
-    interp_res = (((y_array[interp_index+1]-y_array[interp_index])*(value-x_array[interp_index]))/(x_array[interp_index+1]-x_array[interp_index]))+y_array[interp_index];    		
-    return(interp_res);
-	}
-  else
-  {
-    //Advance saturation for array min and max
-    if(value<x_array[0])
-    {
-      return(y_array[0]);
-    }
-    else if(value>x_array[7])
-    {
-      return(y_array[7]);
-    }
+		if(interp_index != -1)
+		{
+				interp_res = (((y_array[interp_index+1]-y_array[interp_index])*(value-x_array[interp_index]))/(x_array[interp_index+1]-x_array[interp_index]))+y_array[interp_index];    		
+				return(interp_res);
+		}
 		else
-		{	
-			return(0xFF);     //return an error value...
-		}	
-  } 	
+		{
+				//Advance saturation for array min and max
+				if(value<x_array[0])
+				{
+						return(y_array[0]);
+				}
+				else if(value>x_array[7])
+				{
+						return(y_array[7]);
+				}
+				else
+				{	
+						return(0xFF);     //return an error value...
+				}	
+		} 	
 }
 
 uint32_t Saturation(uint32_t var,uint32_t sat)
@@ -1022,14 +1040,13 @@ uint8_t funcLambda(uint8_t PMap,uint16_t Engine_Speed)
     return (100);
 }
 
-uint8_t funcCycles(uint8_t temp)
+uint16_t funcCycles(uint8_t temp)
 {
     static uint16_t resp;
 	
 	  //resp=Linear_Interpolation(temp,Calibration_RAM.BP_Engine_Temperature,Calibration_RAM.BP_Cycles);
-	  //resp=buceta(temp,Calibration_RAM.BP_Engine_Temperature,Calibration_RAM.BP_Cycles);
-	  resp=buceta(70,Calibration_RAM.BP_Engine_Temperature,Calibration_RAM.BP_Cycles);
-		//resp=200;
+	  resp=buceta(temp,Calibration_RAM.BP_Engine_Temperature,Calibration_RAM.BP_Cycles);
+	  //resp=200;
 	
     return (resp);
 }
@@ -1058,8 +1075,7 @@ void TPSLinearization(void)
 
 void MAPLinearization(void)
 {
-    //scenario.PMap=(scenario.PMapRaw*110)/255;
-	  scenario.PMap=(100*scenario.PMapRaw)/4095;
+    scenario.PMap=(100*scenario.PMapRaw)/4095;
 		scenario.PMap=101;
 }
 
@@ -1071,15 +1087,13 @@ void LambdaLinearization(void)
 
 void EngineTempLinearization(void)
 {
-    //scenario.EngineTemp=(scenario.EngineTempRaw*180)/255;
-	  scenario.EngineTemp=(scenario.EngineTempRaw*150)/4095;
+    scenario.EngineTemp=(scenario.EngineTempRaw*150)/4095;
 	  scenario.EngineTemp=90;
 }
 
 void TairLinearization(void)
 {
-    //scenario.Tair=(scenario.TairRaw*150)/255;
-	  scenario.Tair=(scenario.TairRaw*150)/4095;
+    scenario.Tair=(scenario.TairRaw*150)/4095;
 		scenario.Tair=45;
 }
 
