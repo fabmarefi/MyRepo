@@ -423,6 +423,11 @@
               <FileType>1</FileType>
               <FilePath>..\Src\FlASH_PAGE.c</FilePath>
             </File>
+            <File>
+              <FileName>TOOLS.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Src\TOOLS.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

@@ -5,6 +5,8 @@
  *      Author: Jerena
  */
 
+#define SCHEDULLER_c
+
 #include "SCHEDULLER.h"
 
 void Periodic_task(uint32_t period, void (*func)(void), sched_var var[], uint8_t pos)

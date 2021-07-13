@@ -3,7 +3,7 @@
 <title>Static Call Graph - [RD135EFI\RD135EFI.axf]</title></head>
 <body><HR>
 <H1>Static Call Graph for image RD135EFI\RD135EFI.axf</H1><HR>
-<BR><P>#&#060CALLGRAPH&#062# ARM Linker, 5060960: Last Updated: Tue Jul 13 15:08:02 2021
+<BR><P>#&#060CALLGRAPH&#062# ARM Linker, 5060960: Last Updated: Tue Jul 13 18:14:23 2021
 <BR><P>
 <H3>Maximum Stack Usage =        160 bytes + Unknown(Cycles, Untraceable Function Pointers)</H3><H3>
 Call chain for Maximum Stack Depth:</H3>
@@ -303,8 +303,8 @@ Global Symbols
 <BR><BR>[Called By]<UL><LI><a href="#[3c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Task_Fast
 </UL>
 
-<P><STRONG><a name="[4c]"></a>Board_Temp</STRONG> (Thumb, 50 bytes, Stack size 4 bytes, main.o(i.Board_Temp))
-<BR><BR>[Stack]<UL><LI>Max Depth = 16<LI>Call Chain = Board_Temp &rArr; Filter16bits
+<P><STRONG><a name="[4c]"></a>Board_Temp</STRONG> (Thumb, 50 bytes, Stack size 8 bytes, main.o(i.Board_Temp))
+<BR><BR>[Stack]<UL><LI>Max Depth = 20<LI>Call Chain = Board_Temp &rArr; Filter16bits
 </UL>
 <BR>[Calls]<UL><LI><a href="#[4d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Filter16bits
 </UL>
@@ -399,7 +399,7 @@ Global Symbols
 <BR>[Called By]<UL><LI><a href="#[93]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_TIM_IC_CaptureCallback
 </UL>
 
-<P><STRONG><a name="[4d]"></a>Filter16bits</STRONG> (Thumb, 22 bytes, Stack size 12 bytes, main.o(i.Filter16bits))
+<P><STRONG><a name="[4d]"></a>Filter16bits</STRONG> (Thumb, 22 bytes, Stack size 12 bytes, tools.o(i.Filter16bits))
 <BR><BR>[Stack]<UL><LI>Max Depth = 12<LI>Call Chain = Filter16bits
 </UL>
 <BR>[Called By]<UL><LI><a href="#[d8]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;VBatLinearization
@@ -407,14 +407,14 @@ Global Symbols
 </UL>
 
 <P><STRONG><a name="[5f]"></a>FuelCalc</STRONG> (Thumb, 552 bytes, Stack size 8 bytes, main.o(i.FuelCalc))
-<BR><BR>[Stack]<UL><LI>Max Depth = 64<LI>Call Chain = FuelCalc &rArr; WarmUp_Treatment &rArr; funcwarmUp &rArr; panceta &rArr; morcega
+<BR><BR>[Stack]<UL><LI>Max Depth = 72<LI>Call Chain = FuelCalc &rArr; WarmUp_Treatment &rArr; funcwarmUp &rArr; panceta &rArr; morcega
 </UL>
-<BR>[Calls]<UL><LI><a href="#[60]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;funccrankTerm
+<BR>[Calls]<UL><LI><a href="#[61]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Saturation
+<LI><a href="#[60]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;funccrankTerm
 <LI><a href="#[65]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;funcVoleff
 <LI><a href="#[66]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;funcLambda
 <LI><a href="#[62]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;WarmUp_Treatment
 <LI><a href="#[63]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;TPS_Treatment
-<LI><a href="#[61]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Saturation
 <LI><a href="#[64]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Overspeed_Treatment
 <LI><a href="#[67]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;LambdaCorrectionFunc
 <LI><a href="#[55]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Injector_CMD
@@ -1060,7 +1060,7 @@ Global Symbols
 <P><STRONG><a name="[6]"></a>SVC_Handler</STRONG> (Thumb, 2 bytes, Stack size 0 bytes, stm32f1xx_it.o(i.SVC_Handler))
 <BR>[Address Reference Count : 1]<UL><LI> startup_stm32f103xb.o(RESET)
 </UL>
-<P><STRONG><a name="[61]"></a>Saturation</STRONG> (Thumb, 8 bytes, Stack size 0 bytes, main.o(i.Saturation))
+<P><STRONG><a name="[61]"></a>Saturation</STRONG> (Thumb, 8 bytes, Stack size 0 bytes, tools.o(i.Saturation))
 <BR><BR>[Called By]<UL><LI><a href="#[5f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;FuelCalc
 </UL>
 
@@ -1218,7 +1218,7 @@ Global Symbols
 </UL>
 
 <P><STRONG><a name="[3c]"></a>Task_Fast</STRONG> (Thumb, 44 bytes, Stack size 8 bytes, main.o(i.Task_Fast))
-<BR><BR>[Stack]<UL><LI>Max Depth = 72<LI>Call Chain = Task_Fast &rArr; FuelCalc &rArr; WarmUp_Treatment &rArr; funcwarmUp &rArr; panceta &rArr; morcega
+<BR><BR>[Stack]<UL><LI>Max Depth = 80<LI>Call Chain = Task_Fast &rArr; FuelCalc &rArr; WarmUp_Treatment &rArr; funcwarmUp &rArr; panceta &rArr; morcega
 </UL>
 <BR>[Calls]<UL><LI><a href="#[d5]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;TairLinearization
 <LI><a href="#[d1]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;TPSLinearization
@@ -1240,8 +1240,8 @@ Global Symbols
 </UL>
 <BR>[Address Reference Count : 1]<UL><LI> main.o(i.main)
 </UL>
-<P><STRONG><a name="[3e]"></a>Task_Slow</STRONG> (Thumb, 12 bytes, Stack size 4 bytes, main.o(i.Task_Slow))
-<BR><BR>[Stack]<UL><LI>Max Depth = 20<LI>Call Chain = Task_Slow &rArr; VBatLinearization &rArr; Filter16bits
+<P><STRONG><a name="[3e]"></a>Task_Slow</STRONG> (Thumb, 12 bytes, Stack size 8 bytes, main.o(i.Task_Slow))
+<BR><BR>[Stack]<UL><LI>Max Depth = 28<LI>Call Chain = Task_Slow &rArr; VBatLinearization &rArr; Filter16bits
 </UL>
 <BR>[Calls]<UL><LI><a href="#[d8]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;VBatLinearization
 <LI><a href="#[4c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Board_Temp
@@ -1276,16 +1276,16 @@ Global Symbols
 <P><STRONG><a name="[5]"></a>UsageFault_Handler</STRONG> (Thumb, 4 bytes, Stack size 0 bytes, stm32f1xx_it.o(i.UsageFault_Handler))
 <BR>[Address Reference Count : 1]<UL><LI> startup_stm32f103xb.o(RESET)
 </UL>
-<P><STRONG><a name="[d8]"></a>VBatLinearization</STRONG> (Thumb, 60 bytes, Stack size 4 bytes, main.o(i.VBatLinearization))
-<BR><BR>[Stack]<UL><LI>Max Depth = 16<LI>Call Chain = VBatLinearization &rArr; Filter16bits
+<P><STRONG><a name="[d8]"></a>VBatLinearization</STRONG> (Thumb, 60 bytes, Stack size 8 bytes, main.o(i.VBatLinearization))
+<BR><BR>[Stack]<UL><LI>Max Depth = 20<LI>Call Chain = VBatLinearization &rArr; Filter16bits
 </UL>
 <BR>[Calls]<UL><LI><a href="#[4d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Filter16bits
 </UL>
 <BR>[Called By]<UL><LI><a href="#[3e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Task_Slow
 </UL>
 
-<P><STRONG><a name="[62]"></a>WarmUp_Treatment</STRONG> (Thumb, 48 bytes, Stack size 4 bytes, main.o(i.WarmUp_Treatment))
-<BR><BR>[Stack]<UL><LI>Max Depth = 56<LI>Call Chain = WarmUp_Treatment &rArr; funcwarmUp &rArr; panceta &rArr; morcega
+<P><STRONG><a name="[62]"></a>WarmUp_Treatment</STRONG> (Thumb, 48 bytes, Stack size 8 bytes, main.o(i.WarmUp_Treatment))
+<BR><BR>[Stack]<UL><LI>Max Depth = 64<LI>Call Chain = WarmUp_Treatment &rArr; funcwarmUp &rArr; panceta &rArr; morcega
 </UL>
 <BR>[Calls]<UL><LI><a href="#[db]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;funcwarmUp
 <LI><a href="#[da]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;funcCycles
@@ -1299,7 +1299,7 @@ Global Symbols
 
 <P><STRONG><a name="[f0]"></a>__scatterload_zeroinit</STRONG> (Thumb, 14 bytes, Stack size unknown bytes, handlers.o(i.__scatterload_zeroinit), UNUSED)
 
-<P><STRONG><a name="[dc]"></a>buceta</STRONG> (Thumb, 96 bytes, Stack size 24 bytes, main.o(i.buceta))
+<P><STRONG><a name="[dc]"></a>buceta</STRONG> (Thumb, 96 bytes, Stack size 24 bytes, tools.o(i.buceta))
 <BR><BR>[Stack]<UL><LI>Max Depth = 40<LI>Call Chain = buceta &rArr; caraio
 </UL>
 <BR>[Calls]<UL><LI><a href="#[dd]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;caraio
@@ -1307,7 +1307,7 @@ Global Symbols
 <BR>[Called By]<UL><LI><a href="#[da]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;funcCycles
 </UL>
 
-<P><STRONG><a name="[dd]"></a>caraio</STRONG> (Thumb, 64 bytes, Stack size 16 bytes, main.o(i.caraio))
+<P><STRONG><a name="[dd]"></a>caraio</STRONG> (Thumb, 64 bytes, Stack size 16 bytes, tools.o(i.caraio))
 <BR><BR>[Stack]<UL><LI>Max Depth = 16<LI>Call Chain = caraio
 </UL>
 <BR>[Called By]<UL><LI><a href="#[dc]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;buceta
@@ -1351,8 +1351,8 @@ Global Symbols
 <BR><BR>[Called By]<UL><LI><a href="#[63]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;TPS_Treatment
 </UL>
 
-<P><STRONG><a name="[db]"></a>funcwarmUp</STRONG> (Thumb, 22 bytes, Stack size 12 bytes, main.o(i.funcwarmUp))
-<BR><BR>[Stack]<UL><LI>Max Depth = 52<LI>Call Chain = funcwarmUp &rArr; panceta &rArr; morcega
+<P><STRONG><a name="[db]"></a>funcwarmUp</STRONG> (Thumb, 22 bytes, Stack size 16 bytes, main.o(i.funcwarmUp))
+<BR><BR>[Stack]<UL><LI>Max Depth = 56<LI>Call Chain = funcwarmUp &rArr; panceta &rArr; morcega
 </UL>
 <BR>[Calls]<UL><LI><a href="#[de]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;panceta
 </UL>
@@ -1381,13 +1381,13 @@ Global Symbols
 </UL>
 <BR>[Address Reference Count : 1]<UL><LI> entry9a.o(.ARM.Collect$$$$0000000B)
 </UL>
-<P><STRONG><a name="[e0]"></a>morcega</STRONG> (Thumb, 64 bytes, Stack size 16 bytes, main.o(i.morcega))
+<P><STRONG><a name="[e0]"></a>morcega</STRONG> (Thumb, 64 bytes, Stack size 16 bytes, tools.o(i.morcega))
 <BR><BR>[Stack]<UL><LI>Max Depth = 16<LI>Call Chain = morcega
 </UL>
 <BR>[Called By]<UL><LI><a href="#[de]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;panceta
 </UL>
 
-<P><STRONG><a name="[de]"></a>panceta</STRONG> (Thumb, 92 bytes, Stack size 24 bytes, main.o(i.panceta))
+<P><STRONG><a name="[de]"></a>panceta</STRONG> (Thumb, 92 bytes, Stack size 24 bytes, tools.o(i.panceta))
 <BR><BR>[Stack]<UL><LI>Max Depth = 40<LI>Call Chain = panceta &rArr; morcega
 </UL>
 <BR>[Calls]<UL><LI><a href="#[e0]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;morcega

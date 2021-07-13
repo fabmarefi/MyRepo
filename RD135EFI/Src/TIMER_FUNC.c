@@ -4,6 +4,7 @@
  *  Created on: 13-Jul-2021
  *      Author: Jerena
  */
+#define TIMER_FUNC_c
 
 #include "TIMER_FUNC.h"
 

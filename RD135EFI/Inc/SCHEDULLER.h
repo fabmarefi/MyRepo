@@ -9,9 +9,7 @@
 #define INC_SCHEDULLER_H_
 
 #include "stm32f1xx_hal.h"
-
-#define FALSE                          0
-#define TRUE                           1
+#include "GEN_DEF.h"
 
 typedef struct Scheduler
 {
@@ -19,10 +17,37 @@ typedef struct Scheduler
     uint32_t target_time;
 }sched_var;
 
-void Task_Fast(void);
-void Task_Medium(void);
-void Task_Slow(void);
+#ifndef SCHEDULLER_c
+sched_var array_sched_var[3];
+#endif
 
 void Periodic_task(uint32_t period, void (*func)(void), sched_var var[], uint8_t pos);
 
+/*
+#ifndef SCHEDULLER_c
+#define SCOPE   extern
+
+SCOPE sched_var array_sched_var[3];
+
+SCOPE void Task_Fast(void);
+SCOPE void Task_Medium(void);
+SCOPE void Task_Slow(void);
+
+SCOPE void Periodic_task(uint32_t period, void (*func)(void), sched_var var[], uint8_t pos);
+
+#else
+#define SCOPE
+#endif
+
+SCOPE sched_var array_sched_var[3];
+
+SCOPE void Task_Fast(void);
+SCOPE void Task_Medium(void);
+SCOPE void Task_Slow(void);
+
+SCOPE void Periodic_task(uint32_t period, void (*func)(void), sched_var var[], uint8_t pos);
+
+#undef SCOPE
+*/
 #endif /* INC_SCHEDULLER_H_ */
+
