@@ -23,6 +23,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "GEN_DEF.h"
+
 #include "SCHEDULLER.h"
 #include "TIMER_FUNC.h"
 #include "TOOLS.h"
@@ -48,18 +49,18 @@ ADC_HandleTypeDef hadc1;
 DMA_HandleTypeDef hdma_adc1;
 
 TIM_HandleTypeDef htim2;
-TIM_HandleTypeDef htim4;
+//TIM_HandleTypeDef htim4;
 
 UART_HandleTypeDef huart3;
 DMA_HandleTypeDef hdma_usart3_rx;
 
 /* USER CODE BEGIN PV */
+#include "IO_CONTROL.h"
+
 #define TMR2_16bits               65536u
 #define EngineSpeedPeriod_Min    785455u     //100rpm
 #define EngineSpeedPeriod_Max      5236u     //15000rpm
 #define RPM_const              78545455u
-#define PWM_0                          0
-#define PWM_100                     1001
 
 #define AFR_Bensine                  132
 #define AFR_Ethanol                   90
@@ -278,141 +279,6 @@ void InjectorDeadTimeCalc(void);
 void Injector_CMD(uint16_t pwm);
 uint8_t funcwarmUp(uint8_t temp);
 uint16_t funcCycles(uint8_t temp);
-
-//Led Green (Bluepill)
-void Toggle_LED_Green(void)
-{
-		HAL_GPIO_TogglePin(GPIOC,GPIO_PIN_13);
-}
-
-void Set_Output_LED_Green(uint8_t	Value)
-{
-		if(Value==ON)
-		{
-				HAL_GPIO_WritePin(GPIOC,GPIO_PIN_13,GPIO_PIN_RESET);
-		}
-		else
-		{
-				HAL_GPIO_WritePin(GPIOC,GPIO_PIN_13,GPIO_PIN_SET);
-		}
-}
-
-//Led Red
-void Toggle_LED_Red(void)
-{
-    HAL_GPIO_TogglePin(GPIOB,GPIO_PIN_12);
-}
-
-void Set_Output_LED_Red(uint8_t	Value)
-{
-		if(Value==ON)
-		{
-				HAL_GPIO_WritePin(GPIOB,GPIO_PIN_12,GPIO_PIN_RESET);
-		}
-		else
-		{
-				HAL_GPIO_WritePin(GPIOB,GPIO_PIN_12,GPIO_PIN_SET);
-		}
-}
-
-//Led Blue
-void Toggle_LED_Blue(void)
-{
-    HAL_GPIO_TogglePin(GPIOB,GPIO_PIN_13);
-}
-
-void Set_Output_LED_Blue(uint8_t Value)
-{
-		if(Value==ON)
-		{
-				HAL_GPIO_WritePin(GPIOB,GPIO_PIN_13,GPIO_PIN_RESET);
-		}
-		else
-		{
-				HAL_GPIO_WritePin(GPIOB,GPIO_PIN_13,GPIO_PIN_SET);
-		}
-}
-
-//Led Yellow
-void Toggle_LED_Yellow(void)
-{
-    HAL_GPIO_TogglePin(GPIOB,GPIO_PIN_14);
-}
-
-void Set_Output_LED_Yellow(uint8_t Value)
-{
-		if(Value==ON)
-		{
-				HAL_GPIO_WritePin(GPIOB,GPIO_PIN_14,GPIO_PIN_RESET);
-		}
-		else
-		{
-				HAL_GPIO_WritePin(GPIOB,GPIO_PIN_14,GPIO_PIN_SET);
-		}
-}
-
-//Pump
-void Set_Ouput_Pump(uint8_t Value)
-{
-    if (Value==ON)
-    {
-        //HAL_GPIO_WritePin(GPIOB,GPIO_PIN_6,GPIO_PIN_SET);
-				HAL_GPIO_WritePin(GPIOB,GPIO_PIN_14,GPIO_PIN_RESET);
-    }
-    else
-    {
-        //HAL_GPIO_WritePin(GPIOB,GPIO_PIN_6,GPIO_PIN_RESET);
-				HAL_GPIO_WritePin(GPIOB,GPIO_PIN_14,GPIO_PIN_SET);
-    }
-}
-
-void TurnOffPump(void)
-{
-    Set_Ouput_Pump(OFF);
-}
-
-uint8_t Read_Output_Pump(void)
-{
-    //return(HAL_GPIO_ReadPin(GPIOB,GPIO_PIN_6));
-    return(!HAL_GPIO_ReadPin(GPIOB,GPIO_PIN_14));
-}
-
-//Injector
-void Set_Ouput_Injector(uint8_t Value)
-{
-    if (Value == ON)
-    {
-				//HAL_GPIO_WritePin(GPIOA,GPIO_PIN_2,GPIO_PIN_SET);
-				HAL_GPIO_WritePin(GPIOB,GPIO_PIN_13,GPIO_PIN_RESET);
-    }
-    else
-    {
-        //HAL_GPIO_WritePin(GPIOA,GPIO_PIN_2,GPIO_PIN_RESET);
-        HAL_GPIO_WritePin(GPIOB,GPIO_PIN_13,GPIO_PIN_SET);
-    }
-}
-
-void Injector_CMD(uint16_t pwm)
-{
-    __HAL_TIM_SET_COMPARE(&htim4,TIM_CHANNEL_1,pwm);
-}
-
-void TurnOffInjector(void)
-{
-    Set_Ouput_Injector(OFF);
-		Injector_CMD(PWM_0);
-}
-
-void Hardware_Init(void)
-{
-    Set_Output_LED_Green(OFF);
-    Set_Output_LED_Red(OFF);
-    Set_Output_LED_Blue(OFF);
-    Set_Output_LED_Yellow(OFF);
-    Set_Ouput_Pump(OFF);
-    Set_Ouput_Injector(OFF);
-    Injector_CMD(PWM_0);
-}
 
 void PulseDetection(void)
 {

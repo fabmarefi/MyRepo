@@ -35,3 +35,5 @@ rd135efi\main.o: ../Inc/SCHEDULLER.h
 rd135efi\main.o: ../Inc/TIMER_FUNC.h
 rd135efi\main.o: ../Inc/TOOLS.h
 rd135efi\main.o: ../Inc/FLASH_PAGE.h
+rd135efi\main.o: ../Inc/IO_CONTROL.h
+rd135efi\main.o: ../Inc/IO_CONTROL.h
