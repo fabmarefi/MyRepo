@@ -3,6 +3,7 @@
 "rd135efi\main.o"
 "rd135efi\stm32f1xx_it.o"
 "rd135efi\stm32f1xx_hal_msp.o"
+"rd135efi\scheduller.o"
 "rd135efi\stm32f1xx_hal_gpio_ex.o"
 "rd135efi\stm32f1xx_hal_adc.o"
 "rd135efi\stm32f1xx_hal_adc_ex.o"

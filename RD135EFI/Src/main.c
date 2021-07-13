@@ -22,6 +22,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "SCHEDULLER.h"
 #include "FLASH_PAGE.h"
 /* USER CODE END Includes */
 
@@ -93,15 +94,6 @@ DMA_HandleTypeDef hdma_usart3_rx;
 
 uint8_t Cond0=0,Cond1=0,Cond2=0,Cond3=0,Cond4=0,Cond5=0,Cond6=0,Cond8=0;
 uint32_t Counter0=0,Counter1=0,Counter2=0,Counter3=0,Counter4=0,Counter5=0,Counter6=0,Counter7=0,Counter8=0,Counter9=0,Counter10=0;
-
-//Scheduller
-typedef struct Scheduler
-{
-    uint8_t  program;
-    uint32_t target_time;
-}sched_var;
-
-sched_var array_sched_var[3];
 
 enum TimerID{Timer0,Timer1,Timer2,Timer3,Timer4,Timer5,Timer6,Timer7,Timer8,Timer9,Timer10,Timer11,Timer12,Timer13,Timer14,Timer15};// TimerNumb;
 enum EngineState{WAKEUP,PRIMERINJ,STOP,CRANK,STALL,IDLE,CRUISE,OVERSPEED};
@@ -261,6 +253,8 @@ typedef struct pid_control
 volatile pid_vars pid_control={1300,0,0,600,1000,20,1000,0,0,0};
 
 uint16_t InjectorDeadTimeArray[8]={50,60,70,90,100,150,250,300};
+
+sched_var array_sched_var[3];
 
 //static uint32_t a,b,c,d,e,f,g,h;
 
@@ -1120,25 +1114,6 @@ void Engine_STOP_test(void)
             scenario.Engine_Speed=0u;
             program=FALSE;
         }
-    }
-}
-
-void Periodic_task(uint32_t period, void (*func)(void), sched_var var[], uint8_t pos)
-{
-    volatile uint32_t counter;
-
-    counter = HAL_GetTick();
-
-    if(var[pos].program == FALSE)
-    {
-				var[pos].target_time = counter+period;
-        var[pos].program = TRUE;
-    }
-
-    if(counter>=var[pos].target_time)
-    {
-        var[pos].program = FALSE;
-        (*func)();
     }
 }
 
