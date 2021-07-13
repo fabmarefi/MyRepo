@@ -23,6 +23,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "SCHEDULLER.h"
+#include "TIMER_FUNC.h"
 #include "FLASH_PAGE.h"
 /* USER CODE END Includes */
 
@@ -55,7 +56,7 @@ DMA_HandleTypeDef hdma_usart3_rx;
 #define TRUE                           1
 #define OFF                            0
 #define ON                             1
-#define nTimer                        16
+
 #define TMR2_16bits               65536u
 #define EngineSpeedPeriod_Min    785455u     //100rpm
 #define EngineSpeedPeriod_Max      5236u     //15000rpm
@@ -95,7 +96,7 @@ DMA_HandleTypeDef hdma_usart3_rx;
 uint8_t Cond0=0,Cond1=0,Cond2=0,Cond3=0,Cond4=0,Cond5=0,Cond6=0,Cond8=0;
 uint32_t Counter0=0,Counter1=0,Counter2=0,Counter3=0,Counter4=0,Counter5=0,Counter6=0,Counter7=0,Counter8=0,Counter9=0,Counter10=0;
 
-enum TimerID{Timer0,Timer1,Timer2,Timer3,Timer4,Timer5,Timer6,Timer7,Timer8,Timer9,Timer10,Timer11,Timer12,Timer13,Timer14,Timer15};// TimerNumb;
+
 enum EngineState{WAKEUP,PRIMERINJ,STOP,CRANK,STALL,IDLE,CRUISE,OVERSPEED};
 enum Accel{ACCEL,DECEL,STABLE};
 enum Lambda{RICH,LEAN,INACTIVE};
@@ -141,18 +142,10 @@ volatile struct_Calibration Calibration_RAM = {8000,
 																						  { 100,  100,  100,  100,  100,  100,  100,  100},
 																						  { 100,  100,  100,  100,  100,  100,  100,  100}}};
 
-typedef struct TimerStruct
-{
-    uint32_t target_time;
-    uint8_t  output;
-		void (*func_pointer)();
-}timerSchedtype;
-
-timerSchedtype timerList[nTimer]; //={{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0}};
-
+//timerSchedtype timerList[nTimer]; 													
+																							
 typedef struct system_info
 {
-
 		uint8_t  EnabLambdaCtrl;               //1
     enum EngineState Engine_State;         //WAKEUP
     enum Accel Acceleration;               //STABLE
@@ -255,6 +248,7 @@ volatile pid_vars pid_control={1300,0,0,600,1000,20,1000,0,0,0};
 uint16_t InjectorDeadTimeArray[8]={50,60,70,90,100,150,250,300};
 
 sched_var array_sched_var[3];
+timerSchedtype timerList[nTimer];
 
 //static uint32_t a,b,c,d,e,f,g,h;
 
@@ -675,70 +669,6 @@ u_word FilterLowPass (
 PHydFilV = FilterLowPass ( PHydClrLocV, PHydZ1P, PHydFilV );
 
 */
-
-void setTimeoutHookUp(enum TimerID timer,uint32_t period,void (*func)(void))
-{
-    timerList[timer].target_time=HAL_GetTick()+period;
-    timerList[timer].func_pointer=*func;
-    timerList[timer].output=FALSE;
-}
-
-uint8_t checkTimeoutHookUp(enum TimerID Timer)
-{
-    uint8_t TempResp=FALSE;
-
-    if(timerList[Timer].output==TRUE)
-    {
-        timerList[Timer].output=FALSE;
-        timerList[Timer].target_time=0;
-        timerList[Timer].func_pointer=0;
-        TempResp=TRUE;
-    }
-
-    return (TempResp);
-}
-
-void TimerListManagement(timerSchedtype timerList[])
-{
-    uint8_t line;
-
-    for(line=0;line<nTimer;line++)
-    {
-        if(timerList[line].target_time!=0)
-        {
-            if(HAL_GetTick()>=timerList[line].target_time)
-            {
-								timerList[line].target_time=0;
-                timerList[line].output=TRUE;
-                timerList[line].func_pointer();
-            }
-        }
-    }
-}
-
-uint8_t Timeout_ms(uint8_t Condition,uint32_t *timer,uint32_t period)
-{
-    uint8_t TimeoutResp=FALSE;
-
-    if(Condition==TRUE)
-    {
-        if(*timer==0)
-        {
-            *timer=HAL_GetTick()+period;
-        }
-
-        if(HAL_GetTick()>=*timer)
-        {
-            TimeoutResp=TRUE;
-        }
-    }
-    else
-    {
-				*timer=0;
-    }
-
-    return (TimeoutResp);
-}
 
 void PulseDetection(void)
 {
@@ -1255,13 +1185,13 @@ void Eng_Status(void)
 														Set_Ouput_Injector(ON);
 														Injector_CMD(PWM_100);
 														//setTimeoutHookUp(Timer0,PrimerPulse(scenario.EngineTemp),&TurnOffInjector);
-														setTimeoutHookUp(Timer0,PrimerPulse(90),&TurnOffInjector);
+														setTimeoutHookUp(timerList,Timer0,PrimerPulse(90),&TurnOffInjector);
 														scenario.Engine_State=PRIMERINJ;
 												}
 
 												break;
 
-				case PRIMERINJ: if(checkTimeoutHookUp(Timer0))
+				case PRIMERINJ: if(checkTimeoutHookUp(timerList,Timer0))
 												{
 														scenario.Engine_Speed=0;
 														Set_Output_LED_Green(ON);   //Crank allowed

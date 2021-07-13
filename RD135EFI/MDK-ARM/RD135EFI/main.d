@@ -31,4 +31,5 @@ rd135efi\main.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_tim.h
 rd135efi\main.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_tim_ex.h
 rd135efi\main.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_uart.h
 rd135efi\main.o: ../Inc/SCHEDULLER.h
+rd135efi\main.o: ../Inc/TIMER_FUNC.h
 rd135efi\main.o: ../Inc/FLASH_PAGE.h

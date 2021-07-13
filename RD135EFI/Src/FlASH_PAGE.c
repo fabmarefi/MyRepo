@@ -9,7 +9,7 @@
 #include "string.h"
 #include "stdio.h"
 
-static uint32_t GetPage(uint32_t Address)
+static int32_t GetPage(uint32_t Address)
 {
   for (int indx=0; indx<128; indx++)
   {
