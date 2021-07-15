@@ -68,6 +68,13 @@ timerSchedtype timerList[nTimer];
 uint8_t Cond0=0,Cond1=0,Cond2=0,Cond3=0,Cond4=0,Cond5=0,Cond6=0,Cond8=0;
 uint32_t Counter0=0,Counter1=0,Counter2=0,Counter3=0,Counter4=0,Counter5=0,Counter6=0,Counter7=0,Counter8=0,Counter9=0,Counter10=0;
 
+//IDLE_CONTROL
+volatile pid_vars pid_control;
+
+//SENSORS
+volatile sensors_measur sensors;	
+
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/

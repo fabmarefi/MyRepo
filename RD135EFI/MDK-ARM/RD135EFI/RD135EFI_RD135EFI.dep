@@ -1,7 +1,7 @@
 Dependencies for Project 'RD135EFI', Target 'RD135EFI': (DO NOT MODIFY !)
 CompilerVersion: 5060960::V5.06 update 7 (build 960)::.\ARMCC
 F (startup_stm32f103xb.s)(0x60E06D8A)(--cpu Cortex-M3 --pd "__EVAL SETA 1" -g --apcs=interwork --pd "__MICROLIB SETA 1"-I.\RTE\_RD135EFI-IC:\Users\A551633\AppData\Local\Arm\Packs\ARM\CMSIS\5.7.0\CMSIS\Core\Include-IC:\Users\A551633\AppData\Local\Arm\Packs\Keil\STM32F1xx_DFP\2.3.0\Device\Include--pd "__UVISION_VERSION SETA 534" --pd "_RTE_ SETA 1" --pd "STM32F10X_MD SETA 1" --pd "_RTE_ SETA 1"--list startup_stm32f103xb.lst --xref -o rd135efi\startup_stm32f103xb.o --depend rd135efi\startup_stm32f103xb.d)
-F (../Src/main.c)(0x60EFFFEB)(--c99 -c --cpu Cortex-M3 -D__EVAL -D__MICROLIB -g -O0 --apcs=interwork --split_sections -I ../Inc -I ../Drivers/STM32F1xx_HAL_Driver/Inc -I ../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy -I ../Drivers/CMSIS/Device/ST/STM32F1xx/Include -I ../Drivers/CMSIS/Include-I.\RTE\_RD135EFI-IC:\Users\A551633\AppData\Local\Arm\Packs\ARM\CMSIS\5.7.0\CMSIS\Core\Include-IC:\Users\A551633\AppData\Local\Arm\Packs\Keil\STM32F1xx_DFP\2.3.0\Device\Include-D__UVISION_VERSION="534" -D_RTE_ -DSTM32F10X_MD -D_RTE_ -DUSE_HAL_DRIVER -DSTM32F103xB-o rd135efi\main.o --omf_browse rd135efi\main.crf --depend rd135efi\main.d)
+F (../Src/main.c)(0x60F0492D)(--c99 -c --cpu Cortex-M3 -D__EVAL -D__MICROLIB -g -O0 --apcs=interwork --split_sections -I ../Inc -I ../Drivers/STM32F1xx_HAL_Driver/Inc -I ../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy -I ../Drivers/CMSIS/Device/ST/STM32F1xx/Include -I ../Drivers/CMSIS/Include-I.\RTE\_RD135EFI-IC:\Users\A551633\AppData\Local\Arm\Packs\ARM\CMSIS\5.7.0\CMSIS\Core\Include-IC:\Users\A551633\AppData\Local\Arm\Packs\Keil\STM32F1xx_DFP\2.3.0\Device\Include-D__UVISION_VERSION="534" -D_RTE_ -DSTM32F10X_MD -D_RTE_ -DUSE_HAL_DRIVER -DSTM32F103xB-o rd135efi\main.o --omf_browse rd135efi\main.crf --depend rd135efi\main.d)
 I (../Inc/main.h)(0x60E06D88)
 I (../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal.h)(0x60C9F6B9)
 I (../Inc/stm32f1xx_hal_conf.h)(0x60E06D88)
@@ -32,13 +32,13 @@ I (../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_pwr.h)(0x60C9F6B9)
 I (../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_tim.h)(0x60C9F6B9)
 I (../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_tim_ex.h)(0x60C9F6B9)
 I (../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_uart.h)(0x60C9F6B9)
-I (../Inc/GEN_DEF.h)(0x60F018F5)
+I (../Inc/GEN_DEF.h)(0x60F04EA6)
 I (../Inc/IO_CONTROL.h)(0x60EFF8DC)
-I (../Inc/SENSORS.h)(0x60F034DE)
+I (../Inc/SENSORS.h)(0x60F0495C)
 I (../Inc/TOOLS.h)(0x60ED95F2)
 I (../Inc/SCHEDULLER.h)(0x60EFFF6B)
 I (../Inc/TIMER_FUNC.h)(0x60EFFFEB)
-I (../Inc/IDLE_CONTROL.h)(0x60F03C88)
+I (../Inc/IDLE_CONTROL.h)(0x60F0486F)
 I (../Inc/LAMBDA_CONTROL.h)(0x60F003D7)
 I (../Inc/FLASH_PAGE.h)(0x60EEB2D8)
 I (../Inc/TPS_TREATMENT.h)(0x60F03E93)
@@ -138,7 +138,7 @@ I (../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_pwr.h)(0x60C9F6B9)
 I (../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_tim.h)(0x60C9F6B9)
 I (../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_tim_ex.h)(0x60C9F6B9)
 I (../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_uart.h)(0x60C9F6B9)
-I (../Inc/GEN_DEF.h)(0x60F018F5)
+I (../Inc/GEN_DEF.h)(0x60F04EA6)
 F (..\Src\TIMER_FUNC.c)(0x60EF47E2)(--c99 -c --cpu Cortex-M3 -D__EVAL -D__MICROLIB -g -O0 --apcs=interwork --split_sections -I ../Inc -I ../Drivers/STM32F1xx_HAL_Driver/Inc -I ../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy -I ../Drivers/CMSIS/Device/ST/STM32F1xx/Include -I ../Drivers/CMSIS/Include-I.\RTE\_RD135EFI-IC:\Users\A551633\AppData\Local\Arm\Packs\ARM\CMSIS\5.7.0\CMSIS\Core\Include-IC:\Users\A551633\AppData\Local\Arm\Packs\Keil\STM32F1xx_DFP\2.3.0\Device\Include-D__UVISION_VERSION="534" -D_RTE_ -DSTM32F10X_MD -D_RTE_ -DUSE_HAL_DRIVER -DSTM32F103xB-o rd135efi\timer_func.o --omf_browse rd135efi\timer_func.crf --depend rd135efi\timer_func.d)
 I (../Inc/TIMER_FUNC.h)(0x60EFFFEB)
 I (../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal.h)(0x60C9F6B9)
@@ -170,7 +170,7 @@ I (../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_pwr.h)(0x60C9F6B9)
 I (../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_tim.h)(0x60C9F6B9)
 I (../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_tim_ex.h)(0x60C9F6B9)
 I (../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_uart.h)(0x60C9F6B9)
-I (../Inc/GEN_DEF.h)(0x60F018F5)
+I (../Inc/GEN_DEF.h)(0x60F04EA6)
 F (..\Src\TOOLS.c)(0x60ED95F2)(--c99 -c --cpu Cortex-M3 -D__EVAL -D__MICROLIB -g -O0 --apcs=interwork --split_sections -I ../Inc -I ../Drivers/STM32F1xx_HAL_Driver/Inc -I ../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy -I ../Drivers/CMSIS/Device/ST/STM32F1xx/Include -I ../Drivers/CMSIS/Include-I.\RTE\_RD135EFI-IC:\Users\A551633\AppData\Local\Arm\Packs\ARM\CMSIS\5.7.0\CMSIS\Core\Include-IC:\Users\A551633\AppData\Local\Arm\Packs\Keil\STM32F1xx_DFP\2.3.0\Device\Include-D__UVISION_VERSION="534" -D_RTE_ -DSTM32F10X_MD -D_RTE_ -DUSE_HAL_DRIVER -DSTM32F103xB-o rd135efi\tools.o --omf_browse rd135efi\tools.crf --depend rd135efi\tools.d)
 I (../Inc/TOOLS.h)(0x60ED95F2)
 I (../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal.h)(0x60C9F6B9)
@@ -233,9 +233,9 @@ I (../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_pwr.h)(0x60C9F6B9)
 I (../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_tim.h)(0x60C9F6B9)
 I (../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_tim_ex.h)(0x60C9F6B9)
 I (../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_uart.h)(0x60C9F6B9)
-I (../Inc/GEN_DEF.h)(0x60F018F5)
+I (../Inc/GEN_DEF.h)(0x60F04EA6)
 F (..\Src\SENSORS.c)(0x60F02FEF)(--c99 -c --cpu Cortex-M3 -D__EVAL -D__MICROLIB -g -O0 --apcs=interwork --split_sections -I ../Inc -I ../Drivers/STM32F1xx_HAL_Driver/Inc -I ../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy -I ../Drivers/CMSIS/Device/ST/STM32F1xx/Include -I ../Drivers/CMSIS/Include-I.\RTE\_RD135EFI-IC:\Users\A551633\AppData\Local\Arm\Packs\ARM\CMSIS\5.7.0\CMSIS\Core\Include-IC:\Users\A551633\AppData\Local\Arm\Packs\Keil\STM32F1xx_DFP\2.3.0\Device\Include-D__UVISION_VERSION="534" -D_RTE_ -DSTM32F10X_MD -D_RTE_ -DUSE_HAL_DRIVER -DSTM32F103xB-o rd135efi\sensors.o --omf_browse rd135efi\sensors.crf --depend rd135efi\sensors.d)
-I (../Inc/SENSORS.h)(0x60F034DE)
+I (../Inc/SENSORS.h)(0x60F0495C)
 I (../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal.h)(0x60C9F6B9)
 I (../Inc/stm32f1xx_hal_conf.h)(0x60E06D88)
 I (../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_rcc.h)(0x60C9F6B9)
@@ -300,7 +300,7 @@ I (../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_uart.h)(0x60C9F6B9)
 I (C:\Keil_v5\ARM\ARMCC\include\string.h)(0x5E8E9122)
 I (C:\Keil_v5\ARM\ARMCC\include\stdio.h)(0x5E8E9122)
 F (..\Src\IDLE_CONTROL.c)(0x60EFF196)(--c99 -c --cpu Cortex-M3 -D__EVAL -D__MICROLIB -g -O0 --apcs=interwork --split_sections -I ../Inc -I ../Drivers/STM32F1xx_HAL_Driver/Inc -I ../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy -I ../Drivers/CMSIS/Device/ST/STM32F1xx/Include -I ../Drivers/CMSIS/Include-I.\RTE\_RD135EFI-IC:\Users\A551633\AppData\Local\Arm\Packs\ARM\CMSIS\5.7.0\CMSIS\Core\Include-IC:\Users\A551633\AppData\Local\Arm\Packs\Keil\STM32F1xx_DFP\2.3.0\Device\Include-D__UVISION_VERSION="534" -D_RTE_ -DSTM32F10X_MD -D_RTE_ -DUSE_HAL_DRIVER -DSTM32F103xB-o rd135efi\idle_control.o --omf_browse rd135efi\idle_control.crf --depend rd135efi\idle_control.d)
-I (../Inc/IDLE_CONTROL.h)(0x60F03C88)
+I (../Inc/IDLE_CONTROL.h)(0x60F0486F)
 I (../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal.h)(0x60C9F6B9)
 I (../Inc/stm32f1xx_hal_conf.h)(0x60E06D88)
 I (../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_rcc.h)(0x60C9F6B9)
@@ -330,8 +330,8 @@ I (../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_pwr.h)(0x60C9F6B9)
 I (../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_tim.h)(0x60C9F6B9)
 I (../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_tim_ex.h)(0x60C9F6B9)
 I (../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_uart.h)(0x60C9F6B9)
-I (../Inc/GEN_DEF.h)(0x60F018F5)
-I (../Inc/SENSORS.h)(0x60F034DE)
+I (../Inc/GEN_DEF.h)(0x60F04EA6)
+I (../Inc/SENSORS.h)(0x60F0495C)
 I (../Inc/TOOLS.h)(0x60ED95F2)
 F (..\Src\LAMBDA_CONTROL.c)(0x60EF47E2)(--c99 -c --cpu Cortex-M3 -D__EVAL -D__MICROLIB -g -O0 --apcs=interwork --split_sections -I ../Inc -I ../Drivers/STM32F1xx_HAL_Driver/Inc -I ../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy -I ../Drivers/CMSIS/Device/ST/STM32F1xx/Include -I ../Drivers/CMSIS/Include-I.\RTE\_RD135EFI-IC:\Users\A551633\AppData\Local\Arm\Packs\ARM\CMSIS\5.7.0\CMSIS\Core\Include-IC:\Users\A551633\AppData\Local\Arm\Packs\Keil\STM32F1xx_DFP\2.3.0\Device\Include-D__UVISION_VERSION="534" -D_RTE_ -DSTM32F10X_MD -D_RTE_ -DUSE_HAL_DRIVER -DSTM32F103xB-o rd135efi\lambda_control.o --omf_browse rd135efi\lambda_control.crf --depend rd135efi\lambda_control.d)
 I (../Inc/LAMBDA_CONTROL.h)(0x60F003D7)
@@ -364,9 +364,9 @@ I (../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_pwr.h)(0x60C9F6B9)
 I (../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_tim.h)(0x60C9F6B9)
 I (../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_tim_ex.h)(0x60C9F6B9)
 I (../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_uart.h)(0x60C9F6B9)
-I (../Inc/GEN_DEF.h)(0x60F018F5)
+I (../Inc/GEN_DEF.h)(0x60F04EA6)
 I (../Inc/TIMER_FUNC.h)(0x60EFFFEB)
-I (../Inc/SENSORS.h)(0x60F034DE)
+I (../Inc/SENSORS.h)(0x60F0495C)
 I (../Inc/TOOLS.h)(0x60ED95F2)
 F (..\Src\FUEL_CALCULATION.c)(0x60F0154A)(--c99 -c --cpu Cortex-M3 -D__EVAL -D__MICROLIB -g -O0 --apcs=interwork --split_sections -I ../Inc -I ../Drivers/STM32F1xx_HAL_Driver/Inc -I ../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy -I ../Drivers/CMSIS/Device/ST/STM32F1xx/Include -I ../Drivers/CMSIS/Include-I.\RTE\_RD135EFI-IC:\Users\A551633\AppData\Local\Arm\Packs\ARM\CMSIS\5.7.0\CMSIS\Core\Include-IC:\Users\A551633\AppData\Local\Arm\Packs\Keil\STM32F1xx_DFP\2.3.0\Device\Include-D__UVISION_VERSION="534" -D_RTE_ -DSTM32F10X_MD -D_RTE_ -DUSE_HAL_DRIVER -DSTM32F103xB-o rd135efi\fuel_calculation.o --omf_browse rd135efi\fuel_calculation.crf --depend rd135efi\fuel_calculation.d)
 I (../Inc/FUEL_CALCULATION.h)(0x60F0154A)
@@ -399,13 +399,13 @@ I (../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_pwr.h)(0x60C9F6B9)
 I (../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_tim.h)(0x60C9F6B9)
 I (../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_tim_ex.h)(0x60C9F6B9)
 I (../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_uart.h)(0x60C9F6B9)
-I (../Inc/GEN_DEF.h)(0x60F018F5)
-I (../Inc/SENSORS.h)(0x60F034DE)
+I (../Inc/GEN_DEF.h)(0x60F04EA6)
+I (../Inc/SENSORS.h)(0x60F0495C)
 I (../Inc/TOOLS.h)(0x60ED95F2)
 I (../Inc/IO_CONTROL.h)(0x60EFF8DC)
 I (../Inc/TPS_TREATMENT.h)(0x60F03E93)
 I (../Inc/TIMER_FUNC.h)(0x60EFFFEB)
-I (../Inc/IDLE_CONTROL.h)(0x60F03C88)
+I (../Inc/IDLE_CONTROL.h)(0x60F0486F)
 I (../Inc/LAMBDA_CONTROL.h)(0x60F003D7)
 F (..\Src\ENGINE_STATE.c)(0x60EF47E2)(--c99 -c --cpu Cortex-M3 -D__EVAL -D__MICROLIB -g -O0 --apcs=interwork --split_sections -I ../Inc -I ../Drivers/STM32F1xx_HAL_Driver/Inc -I ../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy -I ../Drivers/CMSIS/Device/ST/STM32F1xx/Include -I ../Drivers/CMSIS/Include-I.\RTE\_RD135EFI-IC:\Users\A551633\AppData\Local\Arm\Packs\ARM\CMSIS\5.7.0\CMSIS\Core\Include-IC:\Users\A551633\AppData\Local\Arm\Packs\Keil\STM32F1xx_DFP\2.3.0\Device\Include-D__UVISION_VERSION="534" -D_RTE_ -DSTM32F10X_MD -D_RTE_ -DUSE_HAL_DRIVER -DSTM32F103xB-o rd135efi\engine_state.o --omf_browse rd135efi\engine_state.crf --depend rd135efi\engine_state.d)
 I (../Inc/ENGINE_STATE.h)(0x60F0029F)
@@ -439,10 +439,10 @@ I (../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_tim.h)(0x60C9F6B9)
 I (../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_tim_ex.h)(0x60C9F6B9)
 I (../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_uart.h)(0x60C9F6B9)
 I (../Inc/TIMER_FUNC.h)(0x60EFFFEB)
-I (../Inc/GEN_DEF.h)(0x60F018F5)
+I (../Inc/GEN_DEF.h)(0x60F04EA6)
 I (../Inc/IO_CONTROL.h)(0x60EFF8DC)
-I (../Inc/IDLE_CONTROL.h)(0x60F03C88)
-I (../Inc/SENSORS.h)(0x60F034DE)
+I (../Inc/IDLE_CONTROL.h)(0x60F0486F)
+I (../Inc/SENSORS.h)(0x60F0495C)
 I (../Inc/TOOLS.h)(0x60ED95F2)
 F (..\Src\TPS_TREATMENT.c)(0x60EF47E2)(--c99 -c --cpu Cortex-M3 -D__EVAL -D__MICROLIB -g -O0 --apcs=interwork --split_sections -I ../Inc -I ../Drivers/STM32F1xx_HAL_Driver/Inc -I ../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy -I ../Drivers/CMSIS/Device/ST/STM32F1xx/Include -I ../Drivers/CMSIS/Include-I.\RTE\_RD135EFI-IC:\Users\A551633\AppData\Local\Arm\Packs\ARM\CMSIS\5.7.0\CMSIS\Core\Include-IC:\Users\A551633\AppData\Local\Arm\Packs\Keil\STM32F1xx_DFP\2.3.0\Device\Include-D__UVISION_VERSION="534" -D_RTE_ -DSTM32F10X_MD -D_RTE_ -DUSE_HAL_DRIVER -DSTM32F103xB-o rd135efi\tps_treatment.o --omf_browse rd135efi\tps_treatment.crf --depend rd135efi\tps_treatment.d)
 I (../Inc/TPS_TREATMENT.h)(0x60F03E93)
@@ -475,14 +475,14 @@ I (../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_pwr.h)(0x60C9F6B9)
 I (../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_tim.h)(0x60C9F6B9)
 I (../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_tim_ex.h)(0x60C9F6B9)
 I (../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_uart.h)(0x60C9F6B9)
-I (../Inc/GEN_DEF.h)(0x60F018F5)
+I (../Inc/GEN_DEF.h)(0x60F04EA6)
 I (../Inc/IO_CONTROL.h)(0x60EFF8DC)
-I (../Inc/SENSORS.h)(0x60F034DE)
+I (../Inc/SENSORS.h)(0x60F0495C)
 I (../Inc/TOOLS.h)(0x60ED95F2)
 I (../Inc/TIMER_FUNC.h)(0x60EFFFEB)
-I (../Inc/IDLE_CONTROL.h)(0x60F03C88)
-F (..\Src\GEN_DEF.c)(0x60F03D6C)(--c99 -c --cpu Cortex-M3 -D__EVAL -D__MICROLIB -g -O0 --apcs=interwork --split_sections -I ../Inc -I ../Drivers/STM32F1xx_HAL_Driver/Inc -I ../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy -I ../Drivers/CMSIS/Device/ST/STM32F1xx/Include -I ../Drivers/CMSIS/Include-I.\RTE\_RD135EFI-IC:\Users\A551633\AppData\Local\Arm\Packs\ARM\CMSIS\5.7.0\CMSIS\Core\Include-IC:\Users\A551633\AppData\Local\Arm\Packs\Keil\STM32F1xx_DFP\2.3.0\Device\Include-D__UVISION_VERSION="534" -D_RTE_ -DSTM32F10X_MD -D_RTE_ -DUSE_HAL_DRIVER -DSTM32F103xB-o rd135efi\gen_def.o --omf_browse rd135efi\gen_def.crf --depend rd135efi\gen_def.d)
-I (../Inc/GEN_DEF.h)(0x60F018F5)
+I (../Inc/IDLE_CONTROL.h)(0x60F0486F)
+F (..\Src\GEN_DEF.c)(0x60F04EA7)(--c99 -c --cpu Cortex-M3 -D__EVAL -D__MICROLIB -g -O0 --apcs=interwork --split_sections -I ../Inc -I ../Drivers/STM32F1xx_HAL_Driver/Inc -I ../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy -I ../Drivers/CMSIS/Device/ST/STM32F1xx/Include -I ../Drivers/CMSIS/Include-I.\RTE\_RD135EFI-IC:\Users\A551633\AppData\Local\Arm\Packs\ARM\CMSIS\5.7.0\CMSIS\Core\Include-IC:\Users\A551633\AppData\Local\Arm\Packs\Keil\STM32F1xx_DFP\2.3.0\Device\Include-D__UVISION_VERSION="534" -D_RTE_ -DSTM32F10X_MD -D_RTE_ -DUSE_HAL_DRIVER -DSTM32F103xB-o rd135efi\gen_def.o --omf_browse rd135efi\gen_def.crf --depend rd135efi\gen_def.d)
+I (../Inc/GEN_DEF.h)(0x60F04EA6)
 I (../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal.h)(0x60C9F6B9)
 I (../Inc/stm32f1xx_hal_conf.h)(0x60E06D88)
 I (../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_rcc.h)(0x60C9F6B9)

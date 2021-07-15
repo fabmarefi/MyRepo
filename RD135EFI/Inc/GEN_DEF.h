@@ -94,5 +94,5 @@ typedef struct system_info
 
 extern volatile struct_Calibration Calibration_RAM;
 extern volatile system_vars scenario;
-
+	
 #endif /* INC_GEN_DEF_H_ */
