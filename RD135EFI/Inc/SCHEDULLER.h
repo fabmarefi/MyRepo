@@ -17,10 +17,6 @@ typedef struct Scheduler
     uint32_t target_time;
 }sched_var;
 
-#ifndef SCHEDULLER_c
-sched_var array_sched_var[3];
-#endif
-
 void Periodic_task(uint32_t period, void (*func)(void), sched_var var[], uint8_t pos);
 
 /*

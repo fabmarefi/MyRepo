@@ -1,4 +1,4 @@
-rd135efi\flash_page.o: ..\Src\FlASH_PAGE.c
+rd135efi\flash_page.o: ..\Src\FLASH_PAGE.c
 rd135efi\flash_page.o: ../Inc/FLASH_PAGE.h
 rd135efi\flash_page.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal.h
 rd135efi\flash_page.o: ../Inc/stm32f1xx_hal_conf.h

@@ -1,5 +1,5 @@
 /*
- * FlASH_PAGE.c
+ * FLASH_PAGE.c
  *
  *  Created on: 08-May-2020
  *      Author: controllerstech

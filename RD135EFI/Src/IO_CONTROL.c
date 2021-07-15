@@ -5,12 +5,24 @@
  *      Author: Jerena
  */
 
-#define IO_CONTROL_c
+//#define IO_CONTROL_c
 
 #include "IO_CONTROL.h"
 
 //I needed to declarate here so that function could use it...
-TIM_HandleTypeDef htim4;
+//TIM_HandleTypeDef htim4;
+
+//Hardware initialization
+void Hardware_Init(void)
+{
+    Set_Output_LED_Green(OFF);
+    Set_Output_LED_Red(OFF);
+    Set_Output_LED_Blue(OFF);
+    Set_Output_LED_Yellow(OFF);
+    Set_Ouput_Pump(OFF);
+    Set_Ouput_Injector(OFF);
+    Injector_CMD(PWM_0);
+}
 
 //Led Green (Bluepill)
 void Toggle_LED_Green(void)
@@ -136,13 +148,9 @@ void TurnOffInjector(void)
 		Injector_CMD(PWM_0);
 }
 
-void Hardware_Init(void)
+void Set_Ouput_InterruptionTest(void)
 {
-    Set_Output_LED_Green(OFF);
-    Set_Output_LED_Red(OFF);
-    Set_Output_LED_Blue(OFF);
-    Set_Output_LED_Yellow(OFF);
-    Set_Ouput_Pump(OFF);
-    Set_Ouput_Injector(OFF);
-    Injector_CMD(PWM_0);
+    HAL_GPIO_TogglePin(GPIOA,GPIO_PIN_6);
 }
+
+

@@ -419,11 +419,6 @@
               <FilePath>..\Src\TIMER_FUNC.c</FilePath>
             </File>
             <File>
-              <FileName>FlASH_PAGE.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\Src\FlASH_PAGE.c</FilePath>
-            </File>
-            <File>
               <FileName>TOOLS.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\Src\TOOLS.c</FilePath>
@@ -432,6 +427,46 @@
               <FileName>IO_CONTROL.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\Src\IO_CONTROL.c</FilePath>
+            </File>
+            <File>
+              <FileName>SENSORS.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Src\SENSORS.c</FilePath>
+            </File>
+            <File>
+              <FileName>FLASH_PAGE.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Src\FLASH_PAGE.c</FilePath>
+            </File>
+            <File>
+              <FileName>IDLE_CONTROL.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Src\IDLE_CONTROL.c</FilePath>
+            </File>
+            <File>
+              <FileName>LAMBDA_CONTROL.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Src\LAMBDA_CONTROL.c</FilePath>
+            </File>
+            <File>
+              <FileName>FUEL_CALCULATION.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Src\FUEL_CALCULATION.c</FilePath>
+            </File>
+            <File>
+              <FileName>ENGINE_STATE.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Src\ENGINE_STATE.c</FilePath>
+            </File>
+            <File>
+              <FileName>TPS_TREATMENT.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Src\TPS_TREATMENT.c</FilePath>
+            </File>
+            <File>
+              <FileName>GEN_DEF.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Src\GEN_DEF.c</FilePath>
             </File>
           </Files>
         </Group>

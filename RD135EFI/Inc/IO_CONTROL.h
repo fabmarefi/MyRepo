@@ -9,16 +9,16 @@
 #define INC_IO_CONTROL_H_
 
 #include "stm32f1xx_hal.h"
-#include "stm32f1xx_hal_tim.h"
+//#include "stm32f1xx_hal_tim.h"
 #include "GEN_DEF.h"
-#include "IO_CONTROL.h"
+//#include "IO_CONTROL.h"
 
 #define PWM_0                          0
 #define PWM_100                     1001
 
-#ifndef IO_CONTROL_c
+//#ifndef IO_CONTROL_c
 extern TIM_HandleTypeDef htim4;
-#endif
+//#endif
 
 void Toggle_LED_Green(void);
 void Set_Output_LED_Green(uint8_t	Value);
@@ -35,6 +35,7 @@ void Set_Ouput_Injector(uint8_t Value);
 void Injector_CMD(uint16_t pwm);
 void TurnOffInjector(void);
 void Hardware_Init(void);
+void Set_Ouput_InterruptionTest(void);
 
 #endif /* INC_IO_CONTROL_H_ */
 
