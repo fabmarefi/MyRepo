@@ -13,6 +13,8 @@
 //#include "SENSORS.h"
 //#include "IO_CONTROL.h"
 
+volatile pid_vars pid_control={1300,0,0,600,1000,20,1000,0,0,0};
+
 void pid_Init(void)
 {
 		pid_control.CumError=0;

@@ -4,37 +4,8 @@
  *  Created on: 13-Jul-2021
  *      Author: Jerena
  */
-
-//#define ENGINE_STATE_c
-
+ 
 #include "ENGINE_STATE.h"
-//#include "IDLE_CONTROL.h"
-//#include "IO_CONTROL.h"
-//#include "TIMER_FUNC.h"
-
-void PulseDetection(void)
-{
-	  static uint32_t CounterPulseNow,CounterPulseOld;
-
-		Cond8=TRUE;
-
-	  CounterPulseNow=scenario.Rising_Edge_Counter;
-
-		if((CounterPulseNow-CounterPulseOld)>=1)
-		{
-				scenario.pulseDetected=1;
-		}
-		else
-		{
-			  if(Timeout_ms(Cond8,&Counter8,600))
-				{
-						Cond8=FALSE;
-						scenario.pulseDetected=0;
-				}
-		}
-
-		CounterPulseOld=CounterPulseNow;
-}
 
 void EngineSpeedCalculation(void)
 {

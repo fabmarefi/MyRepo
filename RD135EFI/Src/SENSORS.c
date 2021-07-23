@@ -4,13 +4,12 @@
  *  Created on: 13-Jul-2021
  *      Author: Jerena
  */
-
-//#define SENSORS_c
-
+ 
 #include "SENSORS.h"
 
-//sensors={0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
-	
+uint16_t adcArray[7]={0,0,0,0,0,0,0};                                         //AD converter
+volatile sensors_measur sensors={0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};  //All sensor variable related
+
 void Read_Analog_Sensors(void)
 {
     sensors.TPSRaw=adcArray[0];

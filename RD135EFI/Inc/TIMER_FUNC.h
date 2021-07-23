@@ -22,6 +22,10 @@ typedef struct TimerStruct
 		void (*func_pointer)();
 }timerSchedtype;
 
+extern timerSchedtype timerList[nTimer];
+extern uint8_t Cond0,Cond1,Cond2,Cond3,Cond4,Cond5,Cond6,Cond8;
+extern uint32_t Counter0,Counter1,Counter2,Counter3,Counter4,Counter5,Counter6,Counter7,Counter8,Counter9,Counter10;
+
 void setTimeoutHookUp(timerSchedtype timer_list[],enum TimerID timer,uint32_t period,void (*func)(void));
 uint8_t checkTimeoutHookUp(timerSchedtype timer_list[],enum TimerID timer);
 void TimerListManagement(timerSchedtype timer_list[]);

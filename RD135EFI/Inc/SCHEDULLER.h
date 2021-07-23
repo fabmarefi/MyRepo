@@ -17,33 +17,9 @@ typedef struct Scheduler
     uint32_t target_time;
 }sched_var;
 
+extern sched_var array_sched_var[3];   //Scheduller
+
 void Periodic_task(uint32_t period, void (*func)(void), sched_var var[], uint8_t pos);
 
-/*
-#ifndef SCHEDULLER_c
-#define SCOPE   extern
-
-SCOPE sched_var array_sched_var[3];
-
-SCOPE void Task_Fast(void);
-SCOPE void Task_Medium(void);
-SCOPE void Task_Slow(void);
-
-SCOPE void Periodic_task(uint32_t period, void (*func)(void), sched_var var[], uint8_t pos);
-
-#else
-#define SCOPE
-#endif
-
-SCOPE sched_var array_sched_var[3];
-
-SCOPE void Task_Fast(void);
-SCOPE void Task_Medium(void);
-SCOPE void Task_Slow(void);
-
-SCOPE void Periodic_task(uint32_t period, void (*func)(void), sched_var var[], uint8_t pos);
-
-#undef SCOPE
-*/
 #endif /* INC_SCHEDULLER_H_ */
 

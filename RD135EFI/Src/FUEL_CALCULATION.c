@@ -5,15 +5,7 @@
  *      Author: Jerena
  */
 
-//#define FUEL_CALCULATION_c
-
 #include "FUEL_CALCULATION.h"
-//#include "TOOLS.h"
-//#include "ENGINE_STATE.h"
-//#include "IO_CONTROL.h"
-//#include "LAMBDA_CONTROL.h"
-//#include "TPS_TREATMENT.h"
-//#include "SENSORS.h"
 
 void WarmUp_Treatment(void)
 {

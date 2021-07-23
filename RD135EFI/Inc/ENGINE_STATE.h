@@ -27,7 +27,6 @@ extern timerSchedtype timerList[nTimer];
 extern uint8_t Cond0,Cond2,Cond3,Cond4,Cond5,Cond8;
 extern uint32_t Counter0,Counter2,Counter3,Counter4,Counter8;
 
-void PulseDetection(void);
 void EngineSpeedCalculation(void);
 void Engine_STOP_test(void);
 uint32_t PrimerPulse(uint8_t temp);

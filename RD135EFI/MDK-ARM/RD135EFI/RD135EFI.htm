@@ -3,7 +3,7 @@
 <title>Static Call Graph - [RD135EFI\RD135EFI.axf]</title></head>
 <body><HR>
 <H1>Static Call Graph for image RD135EFI\RD135EFI.axf</H1><HR>
-<BR><P>#&#060CALLGRAPH&#062# ARM Linker, 5060960: Last Updated: Thu Jul 15 17:05:24 2021
+<BR><P>#&#060CALLGRAPH&#062# ARM Linker, 5060960: Last Updated: Sat Jul 24 00:25:31 2021
 <BR><P>
 <H3>Maximum Stack Usage =        160 bytes + Unknown(Cycles, Untraceable Function Pointers)</H3><H3>
 Call chain for Maximum Stack Depth:</H3>
@@ -251,6 +251,10 @@ Global Symbols
 
 <P><STRONG><a name="[eb]"></a>__scatterload_rt2</STRONG> (Thumb, 0 bytes, Stack size 0 bytes, init.o(.text), UNUSED)
 
+<P><STRONG><a name="[ec]"></a>__decompress</STRONG> (Thumb, 0 bytes, Stack size unknown bytes, __dczerorl2.o(.text), UNUSED)
+
+<P><STRONG><a name="[ed]"></a>__decompress1</STRONG> (Thumb, 86 bytes, Stack size unknown bytes, __dczerorl2.o(.text), UNUSED)
+
 <P><STRONG><a name="[1c]"></a>ADC1_2_IRQHandler</STRONG> (Thumb, 10 bytes, Stack size 8 bytes, stm32f1xx_it.o(i.ADC1_2_IRQHandler))
 <BR><BR>[Stack]<UL><LI>Max Depth = 16<LI>Call Chain = ADC1_2_IRQHandler &rArr; HAL_ADC_IRQHandler
 </UL>
@@ -341,15 +345,15 @@ Global Symbols
 <P><STRONG><a name="[50]"></a>Eng_State</STRONG> (Thumb, 506 bytes, Stack size 8 bytes, engine_state.o(i.Eng_State))
 <BR><BR>[Stack]<UL><LI>Max Depth = 32<LI>Call Chain = Eng_State &rArr; setTimeoutHookUp
 </UL>
-<BR>[Calls]<UL><LI><a href="#[52]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Set_Ouput_Pump
-<LI><a href="#[54]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Set_Ouput_Injector
-<LI><a href="#[51]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Read_Output_Pump
-<LI><a href="#[55]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Injector_CMD
-<LI><a href="#[57]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;setTimeoutHookUp
+<BR>[Calls]<UL><LI><a href="#[57]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;setTimeoutHookUp
 <LI><a href="#[58]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;checkTimeoutHookUp
 <LI><a href="#[53]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Timeout_ms
 <LI><a href="#[56]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;PrimerPulse
 <LI><a href="#[59]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Set_Output_LED_Green
+<LI><a href="#[52]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Set_Ouput_Pump
+<LI><a href="#[54]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Set_Ouput_Injector
+<LI><a href="#[51]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Read_Output_Pump
+<LI><a href="#[55]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Injector_CMD
 </UL>
 <BR>[Called By]<UL><LI><a href="#[3c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Task_Fast
 </UL>
@@ -387,7 +391,7 @@ Global Symbols
 <BR><BR>[Called By]<UL><LI><a href="#[5c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_FLASH_IRQHandler
 </UL>
 
-<P><STRONG><a name="[5d]"></a>Falling_Edge_Event</STRONG> (Thumb, 36 bytes, Stack size 8 bytes, main.o(i.Falling_Edge_Event))
+<P><STRONG><a name="[5d]"></a>Falling_Edge_Event</STRONG> (Thumb, 36 bytes, Stack size 8 bytes, vrs_treatment.o(i.Falling_Edge_Event))
 <BR><BR>[Stack]<UL><LI>Max Depth = 8<LI>Call Chain = Falling_Edge_Event
 </UL>
 <BR>[Calls]<UL><LI><a href="#[5e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_TIM_ReadCapturedValue
@@ -405,8 +409,7 @@ Global Symbols
 <P><STRONG><a name="[5f]"></a>FuelCalc</STRONG> (Thumb, 546 bytes, Stack size 8 bytes, fuel_calculation.o(i.FuelCalc))
 <BR><BR>[Stack]<UL><LI>Max Depth = 72<LI>Call Chain = FuelCalc &rArr; WarmUp_Treatment &rArr; funcwarmUp &rArr; panceta &rArr; morcega
 </UL>
-<BR>[Calls]<UL><LI><a href="#[55]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Injector_CMD
-<LI><a href="#[61]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Saturation
+<BR>[Calls]<UL><LI><a href="#[61]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Saturation
 <LI><a href="#[63]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;TPS_Treatment
 <LI><a href="#[60]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;funccrankTerm
 <LI><a href="#[65]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;funcVoleff
@@ -414,6 +417,7 @@ Global Symbols
 <LI><a href="#[62]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;WarmUp_Treatment
 <LI><a href="#[64]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Overspeed_Treatment
 <LI><a href="#[67]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;LambdaCorrectionFunc
+<LI><a href="#[55]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Injector_CMD
 </UL>
 <BR>[Called By]<UL><LI><a href="#[3c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Task_Fast
 </UL>
@@ -558,13 +562,13 @@ Global Symbols
 </UL>
 
 <P><STRONG><a name="[c3]"></a>HAL_GPIO_WritePin</STRONG> (Thumb, 12 bytes, Stack size 0 bytes, stm32f1xx_hal_gpio.o(i.HAL_GPIO_WritePin))
-<BR><BR>[Called By]<UL><LI><a href="#[52]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Set_Ouput_Pump
-<LI><a href="#[54]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Set_Ouput_Injector
-<LI><a href="#[c2]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MX_GPIO_Init
+<BR><BR>[Called By]<UL><LI><a href="#[c2]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MX_GPIO_Init
 <LI><a href="#[b7]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Set_Output_LED_Yellow
 <LI><a href="#[b5]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Set_Output_LED_Red
 <LI><a href="#[59]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Set_Output_LED_Green
 <LI><a href="#[b6]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Set_Output_LED_Blue
+<LI><a href="#[52]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Set_Ouput_Pump
+<LI><a href="#[54]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Set_Ouput_Injector
 </UL>
 
 <P><STRONG><a name="[47]"></a>HAL_GetTick</STRONG> (Thumb, 6 bytes, Stack size 0 bytes, stm32f1xx_hal.o(i.HAL_GetTick))
@@ -929,15 +933,15 @@ Global Symbols
 <BR>[Address Reference Count : 1]<UL><LI> startup_stm32f103xb.o(RESET)
 </UL>
 <P><STRONG><a name="[b4]"></a>Hardware_Init</STRONG> (Thumb, 46 bytes, Stack size 8 bytes, io_control.o(i.Hardware_Init))
-<BR><BR>[Stack]<UL><LI>Max Depth = 16<LI>Call Chain = Hardware_Init &rArr; Set_Ouput_Pump
+<BR><BR>[Stack]<UL><LI>Max Depth = 16<LI>Call Chain = Hardware_Init &rArr; Set_Output_LED_Yellow
 </UL>
-<BR>[Calls]<UL><LI><a href="#[52]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Set_Ouput_Pump
-<LI><a href="#[54]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Set_Ouput_Injector
-<LI><a href="#[55]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Injector_CMD
-<LI><a href="#[b7]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Set_Output_LED_Yellow
+<BR>[Calls]<UL><LI><a href="#[b7]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Set_Output_LED_Yellow
 <LI><a href="#[b5]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Set_Output_LED_Red
 <LI><a href="#[59]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Set_Output_LED_Green
 <LI><a href="#[b6]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Set_Output_LED_Blue
+<LI><a href="#[52]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Set_Ouput_Pump
+<LI><a href="#[54]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Set_Ouput_Injector
+<LI><a href="#[55]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Injector_CMD
 </UL>
 <BR>[Called By]<UL><LI><a href="#[35]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;main
 </UL>
@@ -1045,7 +1049,7 @@ Global Symbols
 <BR>[Called By]<UL><LI><a href="#[50]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Eng_State
 </UL>
 
-<P><STRONG><a name="[94]"></a>Rising_Edge_Event</STRONG> (Thumb, 56 bytes, Stack size 8 bytes, main.o(i.Rising_Edge_Event))
+<P><STRONG><a name="[94]"></a>Rising_Edge_Event</STRONG> (Thumb, 56 bytes, Stack size 8 bytes, vrs_treatment.o(i.Rising_Edge_Event))
 <BR><BR>[Stack]<UL><LI>Max Depth = 8<LI>Call Chain = Rising_Edge_Event
 </UL>
 <BR>[Calls]<UL><LI><a href="#[5e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_TIM_ReadCapturedValue
@@ -1289,11 +1293,11 @@ Global Symbols
 <BR>[Called By]<UL><LI><a href="#[5f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;FuelCalc
 </UL>
 
-<P><STRONG><a name="[ec]"></a>__scatterload_copy</STRONG> (Thumb, 14 bytes, Stack size unknown bytes, handlers.o(i.__scatterload_copy), UNUSED)
+<P><STRONG><a name="[ee]"></a>__scatterload_copy</STRONG> (Thumb, 14 bytes, Stack size unknown bytes, handlers.o(i.__scatterload_copy), UNUSED)
 
-<P><STRONG><a name="[ed]"></a>__scatterload_null</STRONG> (Thumb, 2 bytes, Stack size unknown bytes, handlers.o(i.__scatterload_null), UNUSED)
+<P><STRONG><a name="[ef]"></a>__scatterload_null</STRONG> (Thumb, 2 bytes, Stack size unknown bytes, handlers.o(i.__scatterload_null), UNUSED)
 
-<P><STRONG><a name="[ee]"></a>__scatterload_zeroinit</STRONG> (Thumb, 14 bytes, Stack size unknown bytes, handlers.o(i.__scatterload_zeroinit), UNUSED)
+<P><STRONG><a name="[f0]"></a>__scatterload_zeroinit</STRONG> (Thumb, 14 bytes, Stack size unknown bytes, handlers.o(i.__scatterload_zeroinit), UNUSED)
 
 <P><STRONG><a name="[dc]"></a>buceta</STRONG> (Thumb, 96 bytes, Stack size 24 bytes, tools.o(i.buceta))
 <BR><BR>[Stack]<UL><LI>Max Depth = 40<LI>Call Chain = buceta &rArr; caraio

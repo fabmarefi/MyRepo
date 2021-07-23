@@ -42,3 +42,4 @@ rd135efi\main.o: ../Inc/FLASH_PAGE.h
 rd135efi\main.o: ../Inc/TPS_TREATMENT.h
 rd135efi\main.o: ../Inc/ENGINE_STATE.h
 rd135efi\main.o: ../Inc/FUEL_CALCULATION.h
+rd135efi\main.o: ../Inc/VRS_TREATMENT.h

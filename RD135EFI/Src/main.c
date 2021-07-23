@@ -34,6 +34,7 @@
 #include "TPS_TREATMENT.h"
 #include "ENGINE_STATE.h"
 #include "FUEL_CALCULATION.h"
+#include "VRS_TREATMENT.h"
 
 /* USER CODE END Includes */
 
@@ -60,21 +61,6 @@ UART_HandleTypeDef huart3;
 DMA_HandleTypeDef hdma_usart3_rx;
 /* USER CODE BEGIN PV */												
 
-uint16_t adcArray[7];           //AD converter
-sched_var array_sched_var[3];   //Scheduller
-
-//For timer puposes
-timerSchedtype timerList[nTimer];
-uint8_t Cond0=0,Cond1=0,Cond2=0,Cond3=0,Cond4=0,Cond5=0,Cond6=0,Cond8=0;
-uint32_t Counter0=0,Counter1=0,Counter2=0,Counter3=0,Counter4=0,Counter5=0,Counter6=0,Counter7=0,Counter8=0,Counter9=0,Counter10=0;
-
-//IDLE_CONTROL
-volatile pid_vars pid_control;
-
-//SENSORS
-volatile sensors_measur sensors;	
-
-
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -86,32 +72,6 @@ static void MX_TIM4_Init(void);
 static void MX_ADC1_Init(void);
 static void MX_USART3_UART_Init(void);
 /* USER CODE BEGIN PFP */
-
-
-/*
-//Function prototypes
-void TPS_Treatment(void);
-void Eng_Status(void);
-void AccelDer(void);
-void Idle_Management(void);
-void FuelCalc(void);
-void Read_Analog_Sensors(void);
-void Board_Temp(void);
-uint8_t Filter8bits(uint8_t varOld,uint8_t var,uint8_t k);
-uint16_t Filter16bits(uint16_t varOld,uint16_t var,uint8_t k);
-void VBatLinearization(void);
-void TPSLinearization(void);
-void MAPLinearization(void);
-void LambdaLinearization(void);
-void EngineTempLinearization(void);
-void TairLinearization(void);
-void LambdaCorrectionFunc(uint8_t lambdaRequested, uint8_t lambdaMeasured);
-uint8_t funcLambda(uint8_t PMap,uint16_t Engine_Speed);
-void InjectorDeadTimeCalc(void);
-void Injector_CMD(uint16_t pwm);
-uint8_t funcwarmUp(uint8_t temp);
-uint16_t funcCycles(uint8_t temp);
-*/
 
 void Task_Fast(void)
 {
@@ -670,31 +630,6 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
     if(htim->Instance == TIM2)
     {
         scenario.nOverflow++;
-    }
-}
-
-void Rising_Edge_Event(void)
-{
-    scenario.Measured_Period = HAL_TIM_ReadCapturedValue(&htim2,TIM_CHANNEL_1);
-    scenario.nOverflow_RE = scenario.nOverflow;
-    __HAL_TIM_SET_COUNTER(&htim2,0u);
-    scenario.nOverflow = 0u;
-    scenario.Rising_Edge_Counter++;
-
-		if (scenario.Rising_Edge_Counter>=2)
-		{
-				scenario.Update_calc = 1;        //set zero after Engine Stop was detected
-		}
-}
-
-void Falling_Edge_Event(void)
-{
-    scenario.TDuty_Input_Signal = HAL_TIM_ReadCapturedValue(&htim2,TIM_CHANNEL_2);
-    scenario.nOverflow_FE = scenario.nOverflow;
-
-    if (scenario.Rising_Edge_Counter>=2u)
-    {
-        scenario.Update_calc = TRUE;        //set zero after Engine Stop was detected
     }
 }
 
