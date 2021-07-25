@@ -31,11 +31,12 @@ typedef struct Calibration
 	uint8_t BP_Delta_TPS[8];
 	uint8_t BP_MAP[8];
 	uint8_t BP_AirTemp[8];
-	uint16_t BP_Cycles[8];
-	uint16_t BP_InjectorDeadTime[8];
-	uint8_t BP_WarmUp[8];
+	uint16_t TB_Cycles[8];
+	uint16_t TB_InjectorDeadTime[8];
+	uint8_t TB_WarmUp[8];
 	uint8_t TB_Volef[8][8];
 	uint8_t TB_LambdaTarget[8][8];
+	uint8_t TB_Crank[8];
 }struct_Calibration;   
 
 typedef struct system_info

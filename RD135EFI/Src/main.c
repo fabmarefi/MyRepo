@@ -103,6 +103,7 @@ void Task_Slow(void)
 {
     Board_Temp();
     VBatLinearization();
+	  //Engine_STOP_test();
 }
 
 /* USER CODE END PFP */
@@ -146,18 +147,20 @@ int main(void)
   MX_ADC1_Init();
   MX_USART3_UART_Init();
   /* USER CODE BEGIN 2 */
+	
 	//VRS signal
 	HAL_TIM_IC_Start_IT(&htim2, TIM_CHANNEL_1);
 	HAL_TIM_IC_Start_IT(&htim2, TIM_CHANNEL_2);
 	HAL_TIM_Base_Start_IT(&htim2);
 
   Hardware_Init();
-  //HAL_ADC_Start_DMA(&hadc1,(uint32_t *)adcArray,7);
+  
 	HAL_ADC_Start_DMA(&hadc1,(uint32_t *)adcArray,7);
 	HAL_TIM_PWM_Start(&htim4,TIM_CHANNEL_1);
 
 	//Maybe in future I will don´t need PWM to control Idle valve
   HAL_TIM_PWM_Start(&htim4,TIM_CHANNEL_2);
+	
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -172,9 +175,9 @@ int main(void)
       }
 
       //Scheduler
-      Periodic_task(  20,&Task_Fast,   array_sched_var, 0);  //20ms
-      Periodic_task( 100,&Task_Medium, array_sched_var, 1);  //100ms
-      Periodic_task(1000,&Task_Slow,   array_sched_var, 2);  //1s
+      Periodic_task(20,&Task_Fast,array_sched_var,0);    //20ms
+      Periodic_task(100,&Task_Medium,array_sched_var,1); //100ms
+      Periodic_task(1000,&Task_Slow,array_sched_var,2);  //1s
 
       //Timer Management
       TimerListManagement(timerList);

@@ -21,7 +21,7 @@
 #define quickCmdNeg                  -30
 #define tfastenrich                 1000
 #define tfastenleanment             1000
-#define tps_min_cutoff                15
+#define tps_min_cutoff                 5
 #define TimeToGetInCutoff           1000
 
 extern uint8_t Cond5,Cond6;

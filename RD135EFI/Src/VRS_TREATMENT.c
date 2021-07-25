@@ -11,9 +11,7 @@ void PulseDetection(void)
 {
 	  static uint32_t CounterPulseNow,CounterPulseOld;
 
-		Cond8=TRUE;
-
-	  CounterPulseNow=scenario.Rising_Edge_Counter;
+		CounterPulseNow=scenario.Rising_Edge_Counter;
 
 		if((CounterPulseNow-CounterPulseOld)>=1)
 		{
@@ -21,9 +19,12 @@ void PulseDetection(void)
 		}
 		else
 		{
+				Cond8=TRUE;
+			
 			  if(Timeout_ms(Cond8,&Counter8,600))
 				{
 						Cond8=FALSE;
+						Counter8=0;
 						scenario.pulseDetected=0;
 				}
 		}

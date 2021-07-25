@@ -27,7 +27,6 @@ uint8_t funcVoleff(uint8_t PMap,uint16_t Engine_Speed);
 uint8_t funcLambda(uint8_t PMap,uint16_t Engine_Speed);
 uint16_t funcCycles(uint8_t temp);
 void InjectorDeadTimeCalc(void);
-
 void FuelCalc(void);
 
 #endif /* INC_FUEL_CALCULATION_H_ */

@@ -3,7 +3,7 @@
 <title>Static Call Graph - [RD135EFI\RD135EFI.axf]</title></head>
 <body><HR>
 <H1>Static Call Graph for image RD135EFI\RD135EFI.axf</H1><HR>
-<BR><P>#&#060CALLGRAPH&#062# ARM Linker, 5060960: Last Updated: Sat Jul 24 00:25:31 2021
+<BR><P>#&#060CALLGRAPH&#062# ARM Linker, 5060960: Last Updated: Sat Jul 24 21:14:40 2021
 <BR><P>
 <H3>Maximum Stack Usage =        160 bytes + Unknown(Cycles, Untraceable Function Pointers)</H3><H3>
 Call chain for Maximum Stack Depth:</H3>
@@ -1339,8 +1339,12 @@ Global Symbols
 <BR><BR>[Called By]<UL><LI><a href="#[5f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;FuelCalc
 </UL>
 
-<P><STRONG><a name="[60]"></a>funccrankTerm</STRONG> (Thumb, 6 bytes, Stack size 0 bytes, fuel_calculation.o(i.funccrankTerm))
-<BR><BR>[Called By]<UL><LI><a href="#[5f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;FuelCalc
+<P><STRONG><a name="[60]"></a>funccrankTerm</STRONG> (Thumb, 22 bytes, Stack size 16 bytes, fuel_calculation.o(i.funccrankTerm))
+<BR><BR>[Stack]<UL><LI>Max Depth = 56<LI>Call Chain = funccrankTerm &rArr; panceta &rArr; morcega
+</UL>
+<BR>[Calls]<UL><LI><a href="#[de]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;panceta
+</UL>
+<BR>[Called By]<UL><LI><a href="#[5f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;FuelCalc
 </UL>
 
 <P><STRONG><a name="[cf]"></a>funcfastEnleanment</STRONG> (Thumb, 6 bytes, Stack size 0 bytes, tps_treatment.o(i.funcfastEnleanment))
@@ -1393,6 +1397,7 @@ Global Symbols
 <BR>[Calls]<UL><LI><a href="#[e0]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;morcega
 </UL>
 <BR>[Called By]<UL><LI><a href="#[db]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;funcwarmUp
+<LI><a href="#[60]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;funccrankTerm
 </UL>
 
 <P><STRONG><a name="[bd]"></a>pid_Init</STRONG> (Thumb, 14 bytes, Stack size 0 bytes, idle_control.o(i.pid_Init))
