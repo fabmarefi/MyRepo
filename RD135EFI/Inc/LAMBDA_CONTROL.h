@@ -21,6 +21,6 @@
 
 extern uint8_t Cond5,Cond6;
 
-void LambdaCorrectionFunc(uint8_t lambdaRequested, uint8_t lambdaMeasured);
+void LambdaCorrectionFunc(uint8_t lambdaRequested,uint8_t lambdaMeasured);
 
 #endif /* INC_LAMBDA_CONTROL_H_ */

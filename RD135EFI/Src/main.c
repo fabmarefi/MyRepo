@@ -153,9 +153,13 @@ int main(void)
 	HAL_TIM_IC_Start_IT(&htim2, TIM_CHANNEL_2);
 	HAL_TIM_Base_Start_IT(&htim2);
 
+  //Hardware initialization
   Hardware_Init();
   
+	//Analog sensors
 	HAL_ADC_Start_DMA(&hadc1,(uint32_t *)adcArray,7);
+	
+	//Timer to generate IAV PWM signal control
 	HAL_TIM_PWM_Start(&htim4,TIM_CHANNEL_1);
 
 	//Maybe in future I will don´t need PWM to control Idle valve

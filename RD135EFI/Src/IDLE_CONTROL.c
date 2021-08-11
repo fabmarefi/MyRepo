@@ -5,13 +5,7 @@
  *      Author: Jerena
  */
 
-//#define IDLE_CONTROL_c
-
-//#include "ENGINE_STATE.h"
 #include "IDLE_CONTROL.h"
-//#include "GEN_DEF.h"
-//#include "SENSORS.h"
-//#include "IO_CONTROL.h"
 
 volatile pid_vars pid_control={1300,0,0,600,1000,20,1000,0,0,0};
 

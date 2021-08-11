@@ -32,19 +32,19 @@ void TPSLinearization(void)
 void TairLinearization(void)
 {
     sensors.Tair=(sensors.TairRaw*150)/4095;
-		sensors.Tair=45;
+		//sensors.Tair=45;
 }
 
 void MAPLinearization(void)
 {
     sensors.PMap=(100*sensors.PMapRaw)/4095;
-		sensors.PMap=101;
+		//sensors.PMap=101;
 }
 
 void EngineTempLinearization(void)
 {
     sensors.EngineTemp=(sensors.EngineTempRaw*150)/4095;
-	  sensors.EngineTemp=90;
+	  //sensors.EngineTemp=90;
 }
 
 void VBatLinearization(void)

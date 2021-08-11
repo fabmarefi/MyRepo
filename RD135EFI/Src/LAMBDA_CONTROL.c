@@ -21,7 +21,7 @@ Transition time of the output voltage should not exceed 120mS from one level to 
 
 //This control can be used only with narrow band sensor lambda
 
-void LambdaCorrectionFunc(uint8_t lambdaRequested, uint8_t lambdaMeasured)
+void LambdaCorrectionFunc(uint8_t lambdaRequested,uint8_t lambdaMeasured)
 {
 		static enum Lambda crtlStateOld=RICH;
 

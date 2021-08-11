@@ -125,7 +125,7 @@ uint8_t Read_Output_Pump(void)
 //Injector
 void Set_Ouput_Injector(uint8_t Value)
 {
-    if (Value == ON)
+    if (Value==ON)
     {
 				//HAL_GPIO_WritePin(GPIOA,GPIO_PIN_2,GPIO_PIN_SET);
 				HAL_GPIO_WritePin(GPIOB,GPIO_PIN_13,GPIO_PIN_RESET);

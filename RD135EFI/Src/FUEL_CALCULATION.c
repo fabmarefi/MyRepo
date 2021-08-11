@@ -28,8 +28,8 @@ void Overspeed_Treatment(void)
     else
     {
         scenario.overspeedTerm=0;
-        scenario.PW_us=0;
-        Injector_CMD(scenario.PW_us);
+			  Injector_CMD(PWM_0);
+        scenario.PW_us=PWM_0;	
         return;
     }
 }  
@@ -84,16 +84,16 @@ void FuelCalc(void)
 {
     if(scenario.Engine_State==STOP)
     {
-				scenario.PW_us=0;
-				Injector_CMD(scenario.PW_us);
+				Injector_CMD(PWM_0);
+        scenario.PW_us=PWM_0;	
     }
     else if(scenario.Engine_State==CRANK)
     {
         //Fuel strategy
         if(sensors.TPS>maxPedalOnCrank)
         {
-            scenario.PW_us=0;
-						Injector_CMD(scenario.PW_us);
+						Injector_CMD(PWM_0);
+            scenario.PW_us=PWM_0;									  
         }
         else
         {

@@ -32,7 +32,6 @@ typedef struct pid_control
 }pid_vars;
 
 extern volatile pid_vars pid_control;
-//volatile pid_vars pid_control={1300,0,0,600,1000,20,1000,0,0,0};
 extern TIM_HandleTypeDef htim4;
 
 void pid_Init(void);
