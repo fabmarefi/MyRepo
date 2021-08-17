@@ -17,7 +17,7 @@ uint32_t Saturation(uint32_t var,uint32_t sat)
     return(var);
 }
 
-uint8_t Filter8bits(uint8_t varOld,uint8_t var, uint8_t k)
+uint8_t Filter8bits(uint8_t varOld,uint8_t var,uint8_t k)
 {
     int16_t varFiltered;
 
@@ -40,7 +40,7 @@ uint16_t Filter16bits(uint16_t varOld,uint16_t var,uint8_t k)
 // A iterative binary search function. It returns 
 // location of x in given array arr[l..r] if present, 
 // otherwise -1 
-int8_t binarySearch(uint16_t arr[], uint8_t l, uint8_t r, uint16_t x) 
+int8_t binarySearch(uint16_t arr[],uint8_t l,uint8_t r,uint16_t x) 
 { 
 		uint8_t m;
 	
@@ -69,7 +69,7 @@ int8_t binarySearch(uint16_t arr[], uint8_t l, uint8_t r, uint16_t x)
 
 //This function was prepared to return a 8 bits value, however is saturated  in 64
 //Its mandatory in rpm array there are some difference value between two adjacent fields, if do not respect will cause an error return 0xFF
-uint8_t Linear_Interpolation(uint16_t value, uint16_t x_array[], uint8_t y_array[])
+uint8_t Linear_Interpolation(uint16_t value,uint16_t x_array[],uint8_t y_array[])
 {
 		int8_t interp_index;
 		uint8_t interp_res;
@@ -100,39 +100,12 @@ uint8_t Linear_Interpolation(uint16_t value, uint16_t x_array[], uint8_t y_array
 }
 
 //Test
-int8_t caraio(volatile uint8_t arr[], uint8_t l, uint8_t r, uint8_t x) 
-{ 
-		uint8_t m;
-	
-    while (l <= r) 
-		{ 
-        m = l + (r - l) / 2; 
-			  //m = (l + r) / 2; 
-			
-			  // Check if x is present at mid 
-        if ((x >= arr[m]) && (x <= arr[m+1])) 
-            return m; 
-  
-        // If x greater, ignore left half 
-        if (arr[m] < x) 
-            l = m + 1; 
-  
-        // If x is smaller, ignore right half 
-        else
-            r = m - 1; 
-    } 
-  
-    // if we reach here, then element was 
-    // not present 
-    return -1; 
-} 
-
-uint16_t buceta(uint8_t value,volatile uint8_t x_array[],volatile uint16_t y_array[])
+uint16_t buceta(uint8_t value,uint8_t x_array[],uint16_t y_array[])
 {
 		int8_t interp_index;
 		uint16_t interp_res;
 	
-		interp_index = caraio(x_array, 0, 7, value);	
+		interp_index = bunda(x_array, 0, 7, value);	
 	
 		if(interp_index != -1)
 		{
@@ -157,39 +130,51 @@ uint16_t buceta(uint8_t value,volatile uint8_t x_array[],volatile uint16_t y_arr
 		} 	
 }
 
-int8_t morcega(volatile uint8_t arr[], uint8_t l, uint8_t r, uint8_t x) 
+int8_t bunda(uint8_t arr[],uint8_t l,uint8_t r,uint8_t x) 
 { 
-		uint8_t m;
+	  uint8_t m;
 	
-    while (l <= r) 
-		{ 
-        m = l + (r - l) / 2; 
-			  //m = (l + r) / 2; 
-			
-			  // Check if x is present at mid 
-        if ((x >= arr[m]) && (x <= arr[m+1])) 
-            return m; 
+		r=r-1;
+	
+	  if(x<arr[l])
+		{	
+			m=l;
+			return -1;
+		}	
+		else if(x>arr[r])
+		{	
+			m=r;
+			return -1;
+		}	
+					
+	  while(l <= r) 
+	  {
+				m = l + (r - l) / 2;
   
-        // If x greater, ignore left half 
-        if (arr[m] < x) 
-            l = m + 1; 
+        // Check if x is present at mid
+        //if (arr[m] == x)
+			  if ((x>=arr[m])&&(x<arr[m+1])) 
+            return m;
   
-        // If x is smaller, ignore right half 
+        // If x greater, ignore left half
+        if (arr[m] < x)
+            l = m + 1;
+  
+        // If x is smaller, ignore right half
         else
-            r = m - 1; 
-    } 
-  
-    // if we reach here, then element was 
-    // not present 
-    return -1; 
+            r = m - 1;			
+	 }	
+
+	 //Error
+	 return (0xFF);
 } 
 
-uint8_t panceta(uint8_t value, volatile uint8_t x_array[], volatile uint8_t y_array[])
+uint8_t panceta(uint8_t value,uint8_t x_array[],uint8_t y_array[])
 {
 		int8_t interp_index;
 		uint16_t interp_res;
 	
-		interp_index = morcega(x_array, 0, 7, value);	
+		interp_index = bunda(x_array, 0, 7, value);
 	
 		if(interp_index != -1)
 		{

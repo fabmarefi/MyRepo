@@ -59,6 +59,9 @@ typedef struct system_info
 
     int8_t   deltaTPS;                     //0
     uint8_t  TPS_old;                      //0
+	  uint16_t TPS_min;                      //150
+	  uint16_t TPS_max;                      //0
+	  uint8_t  TPS_learned;                  //0
     enum Lambda LambDir;                   //RICH
     uint8_t  Update_calc;                  //TRUE
     uint8_t  LambdaRequested;              //100

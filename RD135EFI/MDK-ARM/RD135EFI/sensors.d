@@ -31,3 +31,4 @@ rd135efi\sensors.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_tim.h
 rd135efi\sensors.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_tim_ex.h
 rd135efi\sensors.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_uart.h
 rd135efi\sensors.o: ../Inc/TOOLS.h
+rd135efi\sensors.o: ../Inc/GEN_DEF.h

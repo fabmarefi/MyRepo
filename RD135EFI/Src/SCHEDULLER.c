@@ -17,7 +17,7 @@ void Periodic_task(uint32_t period, void (*func)(void), sched_var var[], uint8_t
 
     if(var[pos].program == FALSE)
     {
-		var[pos].target_time = counter+period;
+				var[pos].target_time = counter+period;
         var[pos].program = TRUE;
     }
 

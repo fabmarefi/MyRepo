@@ -7,9 +7,21 @@
 
 #include "FUEL_CALCULATION.h"
 
+uint16_t funcCycles(uint8_t temp)
+{
+    static uint16_t resp;
+	
+	  //resp=Linear_Interpolation(temp,Calibration_RAM.BP_Engine_Temperature,Calibration_RAM.TB_Cycles);
+	  //resp=buceta(temp,Calibration_RAM.BP_Engine_Temperature,Calibration_RAM.TB_Cycles);
+	  //resp=200;
+	
+    return (resp);
+}
+
 void WarmUp_Treatment(void)
 {
-    if(scenario.counterCycles<funcCycles(sensors.EngineTemp))
+    //if(scenario.counterCycles<funcCycles(sensors.EngineTemp))
+		if(TRUE)
     {
         scenario.warmUpTerm=funcwarmUp(sensors.EngineTemp);
     }
@@ -49,7 +61,7 @@ uint8_t funccrankTerm(uint8_t temp)
 {
     uint8_t resp;
 	
-	  resp=panceta(temp,Calibration_RAM.BP_Engine_Temperature,Calibration_RAM.TB_Crank);
+	  //resp=panceta(temp,Calibration_RAM.BP_Engine_Temperature,Calibration_RAM.TB_Crank);
 	  	
     return (resp);
 }
@@ -62,17 +74,6 @@ uint8_t funcVoleff(uint8_t PMap,uint16_t Engine_Speed)
 uint8_t funcLambda(uint8_t PMap,uint16_t Engine_Speed)
 {
     return (100);
-}
-
-uint16_t funcCycles(uint8_t temp)
-{
-    static uint16_t resp;
-	
-	  //resp=Linear_Interpolation(temp,Calibration_RAM.BP_Engine_Temperature,Calibration_RAM.TB_Cycles);
-	  resp=buceta(temp,Calibration_RAM.BP_Engine_Temperature,Calibration_RAM.TB_Cycles);
-	  //resp=200;
-	
-    return (resp);
 }
 
 void InjectorDeadTimeCalc(void)

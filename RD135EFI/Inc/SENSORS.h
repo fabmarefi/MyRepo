@@ -49,6 +49,7 @@ extern volatile sensors_measur sensors;
 extern uint16_t adcArray[7];
 
 extern void Read_Analog_Sensors(void);
+extern void LearnTPSLimits(void);
 extern void TPSLinearization(void);
 extern void TairLinearization(void);
 extern void MAPLinearization(void);

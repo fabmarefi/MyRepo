@@ -96,11 +96,13 @@ void Task_Fast(void)
 
 void Task_Medium(void)
 {
-    Idle_Management();
+    Idle_Management();	  
 }
 
 void Task_Slow(void)
-{
+{	  
+	  LearnTPSLimits();  //On test
+	
     Board_Temp();
     VBatLinearization();
 	  //Engine_STOP_test();
