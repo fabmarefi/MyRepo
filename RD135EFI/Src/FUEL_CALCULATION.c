@@ -11,17 +11,27 @@ uint16_t funcCycles(uint8_t temp)
 {
     static uint16_t resp;
 	
-	  //resp=Linear_Interpolation(temp,Calibration_RAM.BP_Engine_Temperature,Calibration_RAM.TB_Cycles);
-	  //resp=buceta(temp,Calibration_RAM.BP_Engine_Temperature,Calibration_RAM.TB_Cycles);
-	  //resp=200;
+	  resp=LinInterp16(temp,Calibration_RAM.BP_Engine_Temperature,Calibration_RAM.TB_Cycles);
+	  	
+    return (resp);
+}
+
+uint8_t funcwarmUp(uint8_t temp)
+{
+	  uint8_t resp;
 	
+	  resp=LinInterp8(temp,Calibration_RAM.BP_Engine_Temperature,Calibration_RAM.TB_WarmUp);
+	  	
     return (resp);
 }
 
 void WarmUp_Treatment(void)
 {
-    //if(scenario.counterCycles<funcCycles(sensors.EngineTemp))
-		if(TRUE)
+		static uint16_t cycle_limit;
+	
+	  cycle_limit=funcCycles(sensors.EngineTemp);
+			
+    if(scenario.counterCycles<cycle_limit)		
     {
         scenario.warmUpTerm=funcwarmUp(sensors.EngineTemp);
     }
@@ -46,22 +56,11 @@ void Overspeed_Treatment(void)
     }
 }  
 
-uint8_t funcwarmUp(uint8_t temp)
-{
-	  uint8_t resp;
-	
-	  //resp=Linear_Interpolation(temp,Calibration_RAM.BP_Engine_Temperature,Calibration_RAM.TB_WarmUp);
-	  resp=panceta(temp,Calibration_RAM.BP_Engine_Temperature,Calibration_RAM.TB_WarmUp);
-	  //resp=200;
-	
-    return (resp);
-}
-
 uint8_t funccrankTerm(uint8_t temp)
 {
     uint8_t resp;
 	
-	  //resp=panceta(temp,Calibration_RAM.BP_Engine_Temperature,Calibration_RAM.TB_Crank);
+	  resp=LinInterp8(temp,Calibration_RAM.BP_Engine_Temperature,Calibration_RAM.TB_Crank);
 	  	
     return (resp);
 }

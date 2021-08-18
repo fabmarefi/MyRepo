@@ -203,7 +203,7 @@
         <Ww>
           <count>10</count>
           <WinNumber>1</WinNumber>
-          <ItemText>safe_exit</ItemText>
+          <ItemText>cycle_limit,0x0A</ItemText>
         </Ww>
       </WatchWindow1>
       <WatchWindow2>
