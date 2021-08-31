@@ -35,6 +35,7 @@
 #include "ENGINE_STATE.h"
 #include "FUEL_CALCULATION.h"
 #include "VRS_TREATMENT.h"
+#include "USART_COMM.h"
 
 /* USER CODE END Includes */
 
@@ -59,6 +60,8 @@ TIM_HandleTypeDef htim2;
 TIM_HandleTypeDef htim4;
 UART_HandleTypeDef huart3;
 DMA_HandleTypeDef hdma_usart3_rx;
+DMA_HandleTypeDef hdma_usart3_tx;
+
 /* USER CODE BEGIN PV */												
 
 /* USER CODE END PV */
@@ -97,6 +100,14 @@ void Task_Fast(void)
 void Task_Medium(void)
 {
     Idle_Management();	  
+	  /*
+	  receiveData();
+
+    if(flgTransmition)
+    {
+        transmitSystemInfo();
+    }
+	  */
 }
 
 void Task_Slow(void)
@@ -112,6 +123,23 @@ void Task_Slow(void)
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
+{
+    //transmstatus = TRANSMISSION_DONE;
+}
+
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
+{
+    //HAL_UART_Receive_DMA(&huart3, (uint8_t*)UART3_rxBuffer, sizeof(UART3_rxBuffer));
+    //receptstatus = DATA_AVAILABLE_RX_BUFFER;
+}
+
+void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart)
+{
+    static int8_t k;
+
+    k++;
+}
 
 /* USER CODE END 0 */
 

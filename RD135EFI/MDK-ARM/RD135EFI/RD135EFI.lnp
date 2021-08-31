@@ -16,6 +16,7 @@
 "rd135efi\tps_treatment.o"
 "rd135efi\gen_def.o"
 "rd135efi\vrs_treatment.o"
+"rd135efi\usart_comm.o"
 "rd135efi\stm32f1xx_hal_gpio_ex.o"
 "rd135efi\stm32f1xx_hal_adc.o"
 "rd135efi\stm32f1xx_hal_adc_ex.o"

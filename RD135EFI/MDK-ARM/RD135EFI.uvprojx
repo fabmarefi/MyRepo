@@ -473,6 +473,11 @@
               <FileType>1</FileType>
               <FilePath>..\Src\VRS_TREATMENT.c</FilePath>
             </File>
+            <File>
+              <FileName>USART_COMM.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Src\USART_COMM.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
