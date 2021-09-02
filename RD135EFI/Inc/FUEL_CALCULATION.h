@@ -19,6 +19,8 @@
 #define InjectorMaxTime              800   //80% time
 #define maxPedalOnCrank               70
 
+extern calibrationBlock calibFlashBlock;
+
 uint16_t funcCycles(uint8_t temp);
 uint8_t funcwarmUp(uint8_t temp);
 void WarmUp_Treatment(void);

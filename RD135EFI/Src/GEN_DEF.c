@@ -7,7 +7,9 @@
 
 #include "GEN_DEF.h"
 
-volatile struct_Calibration Calibration_RAM = {8000,
+calibrationBlock calibFlashBlock;
+
+const calibrationBlock Initial_Calibration =  {8000,
 	                                            ////The first Engine Speed value in the array needs to be 1200 mandatory
                                               {1200, 2000, 3000, 3500, 4500, 5000, 6000, 7000},
 																							{  10,   30,   45,   50,   80,  100,  120,  150},
@@ -36,6 +38,3 @@ volatile struct_Calibration Calibration_RAM = {8000,
 																              {  10,   20,   30,   40,   50,   60,   70,   80}};
 
 volatile system_vars scenario={WAKEUP,STABLE,1,0,0,0,0,0,0,0,0,0,0,0,0,0,600,0,0,RICH,TRUE,100,100,0,100,40,135,132,50,0,0,0,0,0,0,0,10,10,0,0,0,1,100,100,100,100,100,100};		
-	
-//volatile struct_Calibration Calibration_RAM;
-//volatile system_vars scenario;		

@@ -11,7 +11,7 @@ uint16_t funcCycles(uint8_t temp)
 {
     static uint16_t resp;
 	
-	  resp=LinInterp16(temp,Calibration_RAM.BP_Engine_Temperature,Calibration_RAM.TB_Cycles);
+	  resp=LinInterp16(temp,calibFlashBlock.Calibration_RAM.BP_Engine_Temperature,calibFlashBlock.Calibration_RAM.TB_Cycles);
 	  	
     return (resp);
 }
@@ -20,7 +20,7 @@ uint8_t funcwarmUp(uint8_t temp)
 {
 	  uint8_t resp;
 	
-	  resp=LinInterp8(temp,Calibration_RAM.BP_Engine_Temperature,Calibration_RAM.TB_WarmUp);
+	  resp=LinInterp8(temp,calibFlashBlock.Calibration_RAM.BP_Engine_Temperature,calibFlashBlock.Calibration_RAM.TB_WarmUp);
 	  	
     return (resp);
 }
@@ -60,7 +60,7 @@ uint8_t funccrankTerm(uint8_t temp)
 {
     uint8_t resp;
 	
-	  resp=LinInterp8(temp,Calibration_RAM.BP_Engine_Temperature,Calibration_RAM.TB_Crank);
+	  resp=LinInterp8(temp,calibFlashBlock.Calibration_RAM.BP_Engine_Temperature,calibFlashBlock.Calibration_RAM.TB_Crank);
 	  	
     return (resp);
 }
@@ -77,7 +77,7 @@ uint8_t funcLambda(uint8_t PMap,uint16_t Engine_Speed)
 
 void InjectorDeadTimeCalc(void)
 {
-		scenario.InjectorDeadTime=Calibration_RAM.TB_InjectorDeadTime[0];
+		scenario.InjectorDeadTime=calibFlashBlock.Calibration_RAM.TB_InjectorDeadTime[0];
 }
 
 void FuelCalc(void)

@@ -39,6 +39,18 @@ typedef struct Calibration
 	uint8_t TB_Crank[8];
 }struct_Calibration;   
 
+#define blockSize sizeof (struct_Calibration)
+	
+typedef union 
+{
+    struct_Calibration Calibration_RAM;
+    uint32_t array_Calibration_RAM[blockSize>>2];   //Divided in 4 (32/4 = 8 byte)	  
+    uint8_t array_Calibration_RAM_UART[blockSize];
+}calibrationBlock;
+
+extern calibrationBlock calibFlashBlock;
+extern const calibrationBlock Initial_Calibration;
+
 typedef struct system_info
 {
 		enum EngineState Engine_State; 
@@ -96,7 +108,6 @@ typedef struct system_info
 		uint16_t TotalTerm;                    //100    
 }system_vars;
 
-extern volatile struct_Calibration Calibration_RAM;
 extern volatile system_vars scenario;
 	
 #endif /* INC_GEN_DEF_H_ */
