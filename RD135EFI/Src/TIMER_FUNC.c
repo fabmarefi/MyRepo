@@ -6,6 +6,7 @@
  */
  
 #include "TIMER_FUNC.h"
+#include "USART_COMM.h"
 
 timerSchedtype timerList[nTimer];
 uint8_t Cond0=0,Cond1=0,Cond2=0,Cond3=0,Cond4=0,Cond5=0,Cond6=0,Cond8=0;
@@ -16,6 +17,8 @@ void setTimeoutHookUp(timerSchedtype timer_list[],enum TimerID timer,uint32_t pe
 		timer_list[timer].target_time=HAL_GetTick()+period;
 	  timer_list[timer].func_pointer=*func;
 	  timer_list[timer].output=FALSE;
+	
+	  flgTransmition = ON;
 }
 
 uint8_t checkTimeoutHookUp(timerSchedtype timer_list[],enum TimerID timer)

@@ -29,7 +29,6 @@ extern uint32_t Counter0,Counter2,Counter3,Counter4,Counter8;
 
 void EngineSpeedCalculation(void);
 void Engine_STOP_test(void);
-uint32_t PrimerPulse(uint8_t temp);
 void AccelDer(void);
 void Eng_State(void);
 

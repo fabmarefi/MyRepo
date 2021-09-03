@@ -7,12 +7,28 @@
 
 #include "USART_COMM.h"
 
+//Local definition (if I want to share this variables with another modules, I need to include in header file extern + variable name
+/*****************************/
+/*                           */
+/* -Defines                  */
+/* -Variables                */
+/* -Initial settings         */
+/*                           */
+/*****************************/
+
 uint8_t flgTransmition = OFF;
 enum Transmission_Status {TRANSMITING, TRANSMISSION_DONE} transmstatus;
 enum Reception_Status {DATA_AVAILABLE_RX_BUFFER, RECEPTION_DONE} receptstatus;
 uint8_t UART3_txBuffer[blockSize+2];
 uint8_t UART3_rxBuffer[blockSize+2];
 uint8_t UART3_rxBufferAlt[11];
+
+//These function will be available for all modules, but if I don´t declare in header file, compiler will set warning messages
+/*****************************/
+/*                           */
+/*  Function definition      */
+/*                           */
+/*****************************/
 
 void initializeCalibOnRAM(void)
 {

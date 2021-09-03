@@ -27,8 +27,6 @@
 extern uint8_t Cond5,Cond6;
 extern uint32_t Counter5,Counter6,Counter7;
 
-extern void TPS_Treatment(void);
-uint8_t funcfastEnrichment(uint8_t TPS);
-uint8_t funcfastEnleanment(int8_t TPS);
+void TPS_Treatment(void);
 
 #endif /* INC_TPS_TREATMENT_H_ */

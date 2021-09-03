@@ -4,12 +4,8 @@
  *  Created on: 13-Jul-2021
  *      Author: Jerena
  */
-
-//#define LAMBDA_CONTROL_c
-
-#include "LAMBDA_CONTROL.h"
-//#include "TIMER_FUNC.h"
-//#include "SENSORS.h"
+ 
+ #include "LAMBDA_CONTROL.h"
 
 /*
 Important requirements
@@ -20,7 +16,6 @@ Transition time of the output voltage should not exceed 120mS from one level to 
 */
 
 //This control can be used only with narrow band sensor lambda
-
 void LambdaCorrectionFunc(uint8_t lambdaRequested,uint8_t lambdaMeasured)
 {
 		static enum Lambda crtlStateOld=RICH;

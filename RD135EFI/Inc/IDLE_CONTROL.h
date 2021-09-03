@@ -34,13 +34,7 @@ typedef struct pid_control
 extern volatile pid_vars pid_control;
 extern TIM_HandleTypeDef htim4;
 
-void pid_Init(void);
-void Crank_Pos_IACV(void);
-void Open_IACV(void);
-void Close_IACV(void);
 uint16_t funcIdleSetpoint(uint8_t temp);
-void IACV_Control(void);
-void Learn_test_IACV(void);
 void Idle_Management(void);
 
 #endif /* INC_IDLE_CONTROL_H_ */

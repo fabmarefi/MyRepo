@@ -5,13 +5,18 @@
  *      Author: Jerena
  */
 
-//#define TPS_TREATMENT_c
-
 #include "TPS_TREATMENT.h"
-//#include "IO_CONTROL.h"
-//#include "TIMER_FUNC.h"
-//#include "IDLE_CONTROL.h"
-//#include "SENSORS.h"
+
+//Throttle position sensor treatment
+uint8_t funcfastEnrichment(uint8_t TPS)
+{
+    return(120);
+}
+
+uint8_t funcfastEnleanment(int8_t TPS)
+{
+    return(80);
+}
 
 /* Gas treatment */
 //create a automatic learning to get tps_min and tps_max
@@ -59,15 +64,4 @@ void TPS_Treatment(void)
     }
 
     scenario.TPS_old=sensors.TPS;
-}
-
-//Throttle position sensor treatment
-uint8_t funcfastEnrichment(uint8_t TPS)
-{
-    return(120);
-}
-
-uint8_t funcfastEnleanment(int8_t TPS)
-{
-    return(80);
 }

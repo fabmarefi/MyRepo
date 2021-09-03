@@ -102,14 +102,13 @@ void Task_Fast(void)
 void Task_Medium(void)
 {
     Idle_Management();	  
-	  /*
+	  
 	  receiveData();
 
     if(flgTransmition)
     {
         transmitSystemInfo();
-    }
-	  */
+    }	  
 }
 
 void Task_Slow(void)

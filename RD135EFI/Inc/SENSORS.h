@@ -45,17 +45,17 @@ typedef struct sensors_measurement
     uint8_t  EngineTemp;                   
 }sensors_measur;
 
-extern volatile sensors_measur sensors;	
 extern uint16_t adcArray[7];
+extern volatile sensors_measur sensors;	
 
-extern void Read_Analog_Sensors(void);
-extern void LearnTPSLimits(void);
-extern void TPSLinearization(void);
-extern void TairLinearization(void);
-extern void MAPLinearization(void);
-extern void EngineTempLinearization(void);
-extern void VBatLinearization(void);
-extern void LambdaLinearization(void);
-extern void Board_Temp(void);
+void Read_Analog_Sensors(void);
+void LearnTPSLimits(void);
+void TPSLinearization(void);
+void TairLinearization(void);
+void MAPLinearization(void);
+void EngineTempLinearization(void);
+void VBatLinearization(void);
+void LambdaLinearization(void);
+void Board_Temp(void);
 
 #endif /* INC_SENSORS_H_ */

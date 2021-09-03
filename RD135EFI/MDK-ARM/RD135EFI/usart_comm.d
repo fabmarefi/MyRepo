@@ -31,3 +31,4 @@ rd135efi\usart_comm.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_tim.h
 rd135efi\usart_comm.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_tim_ex.h
 rd135efi\usart_comm.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_uart.h
 rd135efi\usart_comm.o: ../Inc/GEN_DEF.h
+rd135efi\usart_comm.o: ../Inc/FLASH_PAGE.h
