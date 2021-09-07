@@ -126,13 +126,13 @@ void Task_Slow(void)
 /* USER CODE BEGIN 0 */
 void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
 {
-    //transmstatus = TRANSMISSION_DONE;
+    transmstatus = TRANSMISSION_DONE;
 }
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
-    //HAL_UART_Receive_DMA(&huart3, (uint8_t*)UART3_rxBuffer, sizeof(UART3_rxBuffer));
-    //receptstatus = DATA_AVAILABLE_RX_BUFFER;
+    HAL_UART_Receive_DMA(&huart3, (uint8_t*)UART3_rxBuffer, sizeof(UART3_rxBuffer));
+    receptstatus = DATA_AVAILABLE_RX_BUFFER;
 }
 
 void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart)

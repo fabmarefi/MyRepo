@@ -17,8 +17,8 @@
 /*****************************/
 
 uint8_t flgTransmition = OFF;
-enum Transmission_Status {TRANSMITING, TRANSMISSION_DONE} transmstatus;
-enum Reception_Status {DATA_AVAILABLE_RX_BUFFER, RECEPTION_DONE} receptstatus;
+enum Transmission_Status transmstatus;
+enum Reception_Status receptstatus;
 uint8_t UART3_txBuffer[blockSize+2];
 uint8_t UART3_rxBuffer[blockSize+2];
 uint8_t UART3_rxBufferAlt[11];
