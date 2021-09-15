@@ -1,7 +1,7 @@
 # Project Details
 
-My motivation to create this project was a desire to create monopoint fuel system injection for a 2 stroke engine 1 cylinder (135cc) using basic sensors
-and using a specific approuch where I inject to fuel amount using a PWM signal
+My motivation to create this project it was a desire to create Fuel  Injection System (monopoint) for a 2 stroke engine (1 cylinder, 135cc)
+based on speed-density calculation, where I inject to fuel amount using a PWM signal to simplify my software and its complexity
 
 ## Core module 
 To create this project I choose the Blue Pill dev board because:
