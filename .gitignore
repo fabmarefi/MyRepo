@@ -3,6 +3,7 @@
 
 #Folder MDK-ARM
 
+*.scvd
 *.uvguix.*
 *.lst
 
