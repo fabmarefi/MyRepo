@@ -37,6 +37,7 @@ typedef struct Calibration
 	uint8_t TB_Volef[8][8];
 	uint8_t TB_LambdaTarget[8][8];
 	uint8_t TB_Crank[8];
+	uint32_t TB_PrimerPulse[8];
 }struct_Calibration;   
 
 #define blockSize sizeof (struct_Calibration)

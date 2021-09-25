@@ -79,6 +79,36 @@ int8_t binarySearch(uint8_t arr[],uint8_t l,uint8_t r,uint8_t x)
 	 return (0xFE);
 } 
 
+uint8_t LinInterp8(uint8_t value,uint8_t x_array[],uint8_t y_array[])
+{
+		int8_t interp_index;
+		uint16_t interp_res;
+	
+		interp_index = binarySearch(x_array, 0, 7, value);
+	
+		if(interp_index != -1)
+		{
+				interp_res = (((y_array[interp_index+1]-y_array[interp_index])*(value-x_array[interp_index]))/(x_array[interp_index+1]-x_array[interp_index]))+y_array[interp_index];    		
+				return(interp_res);
+		}
+		else
+		{
+				//Advance saturation for array min and max
+				if(value<x_array[0])
+				{
+						return(y_array[0]);
+				}
+				else if(value>x_array[7])
+				{
+						return(y_array[7]);
+				}
+				else
+				{	
+						return(0xFF);     //return an error value...
+				}	
+		} 	
+}
+
 //This function was prepared to return a 8 bits value, however is saturated  in 64
 //Its mandatory in rpm array there are some difference value between two adjacent fields, if do not respect will cause an error return 0xFF
 uint16_t LinInterp16(uint8_t value,uint8_t x_array[],uint16_t y_array[])
@@ -111,12 +141,12 @@ uint16_t LinInterp16(uint8_t value,uint8_t x_array[],uint16_t y_array[])
 		} 	
 }
 
-uint8_t LinInterp8(uint8_t value,uint8_t x_array[],uint8_t y_array[])
+uint32_t LinInterp32(uint8_t value,uint8_t x_array[],uint32_t y_array[])
 {
 		int8_t interp_index;
-		uint16_t interp_res;
+		uint32_t interp_res;
 	
-		interp_index = binarySearch(x_array, 0, 7, value);
+		interp_index = binarySearch(x_array, 0, 7, value);	
 	
 		if(interp_index != -1)
 		{

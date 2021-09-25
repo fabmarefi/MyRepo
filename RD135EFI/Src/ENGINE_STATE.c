@@ -65,16 +65,9 @@ void Engine_STOP_test(void)
 uint32_t PrimerPulse(uint8_t temp)
 {
     uint32_t pulseLength;
-
-    if(temp>80)
-    {
-        pulseLength=150;
-    }
-    else
-    {
-        pulseLength=10;
-    }
-
+	
+	  pulseLength=LinInterp32(temp,calibFlashBlock.Calibration_RAM.BP_Engine_Temperature,calibFlashBlock.Calibration_RAM.TB_PrimerPulse);
+	  
     return(pulseLength);
 }
 
@@ -118,8 +111,7 @@ void Eng_State(void)
 														Cond0=FALSE;
 														Set_Ouput_Injector(ON);
 														Injector_CMD(PWM_100);
-														//setTimeoutHookUp(Timer0,PrimerPulse(scenario.EngineTemp),&TurnOffInjector);
-														setTimeoutHookUp(timerList,Timer0,PrimerPulse(90),&TurnOffInjector);
+														setTimeoutHookUp(timerList,Timer0,PrimerPulse(sensors.EngineTemp),&TurnOffInjector);
 														scenario.Engine_State=PRIMERINJ;
 												}
 
