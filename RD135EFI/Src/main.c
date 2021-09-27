@@ -94,7 +94,7 @@ void Task_Fast(void)
     //Fuel calculation
     AccelDer();
     InjectorDeadTimeCalc();
-	  //PulseDetection();
+	  PulseDetection();
     Eng_State();
     FuelCalc();
 }
