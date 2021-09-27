@@ -19,9 +19,9 @@
 uint8_t flgTransmition = OFF;
 enum Transmission_Status transmstatus;
 enum Reception_Status receptstatus;
-uint8_t UART3_txBuffer[blockSize+2];
-uint8_t UART3_rxBuffer[blockSize+2];
-uint8_t UART3_rxBufferAlt[11];
+uint8_t UART1_txBuffer[blockSize+2];
+uint8_t UART1_rxBuffer[blockSize+2];
+uint8_t UART1_rxBufferAlt[11];
 
 //These function will be available for all modules, but if I don´t declare in header file, compiler will set warning messages
 /*****************************/
@@ -46,17 +46,17 @@ void copyCalibUartToRam(void)
 
     for(i=0;i<sizeof(struct_Calibration);i++)
     {
-        calibFlashBlock.array_Calibration_RAM_UART[i] = UART3_rxBuffer[i+1];
+        calibFlashBlock.array_Calibration_RAM_UART[i] = UART1_rxBuffer[i+1];
     }
 }
 
 void copyCalibRamToUart(void)
 {
-    uint8_t i;
+    uint32_t i;
 
     for(i=0;i<blockSize;i++)
     {
-        UART3_rxBuffer[i] = calibFlashBlock.array_Calibration_RAM[i];
+        UART1_rxBuffer[i] = calibFlashBlock.array_Calibration_RAM[i];
     }
 }
 
@@ -78,20 +78,20 @@ void transmitCalibToUART(void)
 
     if(transmstatus == TRANSMISSION_DONE)
     {
-        buffer_length = sizeof(UART3_txBuffer);
+        buffer_length = sizeof(UART1_txBuffer);
 
-        UART3_txBuffer[0] = 0x7E;
-        checksum = UART3_txBuffer[0];
+        UART1_txBuffer[0] = 0x7E;
+        checksum = UART1_txBuffer[0];
 
         for (i=1;i<buffer_length-2;i++)
         {
-            UART3_txBuffer[i] = calibFlashBlock.array_Calibration_RAM_UART[i-1];
-            checksum += UART3_txBuffer[i];
+            UART1_txBuffer[i] = calibFlashBlock.array_Calibration_RAM_UART[i-1];
+            checksum += UART1_txBuffer[i];
         }
 
-        UART3_txBuffer[buffer_length-1] = checksum;
+        UART1_txBuffer[buffer_length-1] = checksum;
         transmstatus = TRANSMITING;
-        HAL_UART_Transmit_DMA(&huart3, UART3_txBuffer, sizeof(UART3_txBuffer));
+        HAL_UART_Transmit_DMA(&huart1, UART1_txBuffer, sizeof(UART1_txBuffer));
     }
 }
 
@@ -104,16 +104,16 @@ void receiveData(void)
 
     if(receptstatus == DATA_AVAILABLE_RX_BUFFER)
     {
-        buffer_length = sizeof(UART3_rxBuffer);
+        buffer_length = sizeof(UART1_rxBuffer);
 
         for(i=0;i<buffer_length-1;i++)
         {
-            checksum += UART3_rxBuffer[i];
+            checksum += UART1_rxBuffer[i];
         }
 
-        if((UART3_rxBuffer[buffer_length-1]-checksum) == 0u)				
+        if((UART1_rxBuffer[buffer_length-1]-checksum) == 0u)				
         {
-            command = UART3_rxBuffer[0];
+            command = UART1_rxBuffer[0];
 
             switch(command)
             {
@@ -175,31 +175,31 @@ void transmitSystemInfo(void)
         Dez = (Man/10u)+0x30;
         Unid = (Man%10u)+0x30;
 
-        UART3_rxBufferAlt[0]='R';
-        UART3_rxBufferAlt[1]=Mil;
-        UART3_rxBufferAlt[2]=Cent;
-        UART3_rxBufferAlt[3]=Dez;
-        UART3_rxBufferAlt[4]=Unid;
-        UART3_rxBufferAlt[5]='A';
+        UART1_rxBufferAlt[0]='R';
+        UART1_rxBufferAlt[1]=Mil;
+        UART1_rxBufferAlt[2]=Cent;
+        UART1_rxBufferAlt[3]=Dez;
+        UART1_rxBufferAlt[4]=Unid;
+        UART1_rxBufferAlt[5]='A';
 
         Cent = (num1/100u)+0x30;
         Man = num1%100u;
         Dez = (Man/10u)+0x30;
         Unid = (Man%10u)+0x30;
 
-        UART3_rxBufferAlt[6]=Cent;
-        UART3_rxBufferAlt[7]=Dez;
-        UART3_rxBufferAlt[8]=Unid;        
+        UART1_rxBufferAlt[6]=Cent;
+        UART1_rxBufferAlt[7]=Dez;
+        UART1_rxBufferAlt[8]=Unid;        
 
-        for(i=0; i < sizeof(UART3_rxBufferAlt)-3; i++)
+        for(i=0; i < sizeof(UART1_rxBufferAlt)-3; i++)
 				{
-						checksum += UART3_rxBufferAlt[i];
+						checksum += UART1_rxBufferAlt[i];
 				}	
 				
-				UART3_rxBufferAlt[9]=checksum; 
-				UART3_rxBufferAlt[10]=0x0A; // '\n' - Line feed
+				UART1_rxBufferAlt[9]=checksum; 
+				UART1_rxBufferAlt[10]=0x0A; // '\n' - Line feed
 
         transmstatus = TRANSMITING;
-        HAL_UART_Transmit_DMA(&huart3, UART3_rxBufferAlt, sizeof(UART3_rxBufferAlt));
+        HAL_UART_Transmit_DMA(&huart1, UART1_rxBufferAlt, sizeof(UART1_rxBufferAlt));
 		}		
 }
